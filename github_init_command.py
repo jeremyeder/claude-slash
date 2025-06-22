@@ -1261,6 +1261,127 @@ yarn-error.log*
             )
 
 
+def get_interactive_options() -> GitHubInitOptions:
+    """Get repository options through interactive prompts."""
+    print("🔧 Interactive GitHub Repository Setup")
+    print("=" * 40)
+
+    # Repository name (required)
+    while True:
+        repo_name = input("Repository name: ").strip()
+        if repo_name:
+            break
+        print("Repository name is required.")
+
+    # Description (optional)
+    description_input = input(f"Description (optional): ").strip()
+    description: Optional[str] = description_input if description_input else None
+
+    # Public/private
+    while True:
+        visibility = input("Make repository public? (y/N): ").strip().lower()
+        if visibility in ["", "n", "no"]:
+            private = True
+            break
+        elif visibility in ["y", "yes"]:
+            private = False
+            break
+        print("Please enter 'y' for yes or 'n' for no.")
+
+    # License
+    print("\nAvailable licenses: MIT, Apache-2.0, GPL-3.0")
+    license_choice: Optional[str] = None
+    while True:
+        license_input = input("License (optional): ").strip()
+        if not license_input or license_input in ["MIT", "Apache-2.0", "GPL-3.0"]:
+            license_choice = license_input if license_input else None
+            break
+        print("Please enter a valid license: MIT, Apache-2.0, GPL-3.0, or leave empty.")
+
+    # Gitignore template
+    print("\nAvailable gitignore templates: python, node, general")
+    gitignore: Optional[str] = None
+    while True:
+        gitignore_input = input("Gitignore template (optional): ").strip()
+        if not gitignore_input or gitignore_input in ["python", "node", "general"]:
+            gitignore = gitignore_input if gitignore_input else None
+            break
+        print("Please enter a valid template: python, node, general, or leave empty.")
+
+    # README
+    while True:
+        create_readme = input("Create README.md? (Y/n): ").strip().lower()
+        if create_readme in ["", "y", "yes"]:
+            readme = True
+            break
+        elif create_readme in ["n", "no"]:
+            readme = False
+            break
+        print("Please enter 'y' for yes or 'n' for no.")
+
+    # Default branch
+    default_branch = input("Default branch name (main): ").strip()
+    default_branch = default_branch if default_branch else "main"
+
+    # Topics
+    topics_input = input("Topics (comma-separated, optional): ").strip()
+    topics = (
+        [t.strip() for t in topics_input.split(",") if t.strip()]
+        if topics_input
+        else None
+    )
+
+    # Website creation
+    while True:
+        create_website = (
+            input("Create Docusaurus documentation website? (y/N): ").strip().lower()
+        )
+        if create_website in ["", "n", "no"]:
+            website = False
+            break
+        elif create_website in ["y", "yes"]:
+            website = True
+            break
+        print("Please enter 'y' for yes or 'n' for no.")
+
+    options = GitHubInitOptions(
+        repo_name=repo_name,
+        description=description,
+        private=private,
+        license=license_choice,
+        gitignore=gitignore,
+        readme=readme,
+        default_branch=default_branch,
+        topics=topics,
+        create_website=website,
+    )
+
+    # Show preview
+    print("\n" + "=" * 40)
+    print("📋 Repository Configuration Preview")
+    print("=" * 40)
+    print(f"Name: {options.repo_name}")
+    print(f"Description: {options.description or 'None'}")
+    print(f"Visibility: {'Private' if options.private else 'Public'}")
+    print(f"License: {options.license or 'None'}")
+    print(f"Gitignore: {options.gitignore or 'None'}")
+    print(f"README: {'Yes' if options.readme else 'No'}")
+    print(f"Default branch: {options.default_branch}")
+    print(f"Topics: {', '.join(options.topics) if options.topics else 'None'}")
+    print(f"Website: {'Yes' if options.create_website else 'No'}")
+
+    # Confirm
+    while True:
+        confirm = input("\nProceed with this configuration? (Y/n): ").strip().lower()
+        if confirm in ["", "y", "yes"]:
+            return options
+        elif confirm in ["n", "no"]:
+            print("Aborting repository creation.")
+            exit(0)
+        else:
+            print("Please enter 'y' for yes or 'n' for no.")
+
+
 def parse_arguments(args: List[str]) -> GitHubInitOptions:
     """Parse command arguments into GitHubInitOptions."""
     parser = argparse.ArgumentParser(
@@ -1268,7 +1389,13 @@ def parse_arguments(args: List[str]) -> GitHubInitOptions:
         description="Initialize and configure a new GitHub repository",
     )
 
-    parser.add_argument("repo_name", help="Name of the repository to create")
+    parser.add_argument("repo_name", nargs="?", help="Name of the repository to create")
+    parser.add_argument(
+        "--interactive",
+        "-i",
+        action="store_true",
+        help="Use interactive mode with prompts",
+    )
     parser.add_argument(
         "--desc", "--description", dest="description", help="Repository description"
     )
@@ -1306,6 +1433,10 @@ def parse_arguments(args: List[str]) -> GitHubInitOptions:
     )
 
     parsed = parser.parse_args(args)
+
+    # Use interactive mode if no repo_name provided or --interactive flag used
+    if not parsed.repo_name or parsed.interactive:
+        return get_interactive_options()
 
     return GitHubInitOptions(
         repo_name=parsed.repo_name,

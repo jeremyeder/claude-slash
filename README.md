@@ -4,6 +4,7 @@ A Python-based slash command for Claude that initializes and configures GitHub r
 
 ## Features
 
+- **Interactive Mode**: User-friendly prompts guide you through repository setup
 - **Security First**: Repositories are private by default
 - **CI/CD Ready**: Every repository includes GitHub Actions workflows
 - **Language-Specific**: CI templates adapt to your project type (Python, Node.js, etc.)
@@ -34,6 +35,24 @@ chmod +x github_init_command.py
 
 ## Usage
 
+### Interactive Mode (Recommended)
+```bash
+# Launch interactive setup (prompts for all options)
+./github_init_command.py
+
+# Or force interactive mode
+./github_init_command.py --interactive
+```
+
+Interactive mode guides you through:
+- Repository name
+- Description
+- Public/private visibility 
+- License selection
+- Gitignore template
+- Topics and settings
+- Preview before creation
+
 ### Basic Usage
 ```bash
 # Create a private repository (default)
@@ -60,6 +79,7 @@ chmod +x github_init_command.py
 
 ### Options
 
+- `--interactive, -i` - Use interactive mode with prompts
 - `--public` - Create a public repository (default: private)
 - `--desc=<description>` - Repository description
 - `--license=<type>` - Add license file (MIT, Apache-2.0, GPL-3.0)

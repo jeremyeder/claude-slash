@@ -47,6 +47,8 @@ github_init_command = SlashCommand(
     description="Initialize and configure a new GitHub repository with best practices",
     usage="/github-init <repo-name> [options]",
     examples=[
+        "/github-init",  # Interactive mode
+        "/github-init --interactive",  # Force interactive mode
         "/github-init my-project",
         "/github-init my-app --public --license=MIT --gitignore=python",
         "/github-init web-app --desc='A new web application' --topics=python,django,api",
@@ -79,6 +81,12 @@ Repositories are created as **private by default** for security.
   --create-website       Initialize a Docusaurus documentation website
 
 ## Examples
+  # Interactive mode (prompts for all options)
+  /github-init
+  
+  # Force interactive mode
+  /github-init --interactive
+  
   # Create a private repository (default)
   /github-init my-private-project
   
