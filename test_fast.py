@@ -27,6 +27,7 @@ class TestFastGitHubInitOptions(unittest.TestCase):
         self.assertEqual(options.default_branch, "main")
         self.assertIsNone(options.topics)
         self.assertFalse(options.create_website)
+        self.assertTrue(options.enable_dependabot)  # Default enabled
 
     def test_all_options(self):
         """Test all option combinations."""
@@ -40,6 +41,7 @@ class TestFastGitHubInitOptions(unittest.TestCase):
             default_branch="dev",
             topics=["a", "b"],
             create_website=True,
+            enable_dependabot=False,
         )
 
         self.assertEqual(options.repo_name, "test")
@@ -51,6 +53,7 @@ class TestFastGitHubInitOptions(unittest.TestCase):
         self.assertEqual(options.default_branch, "dev")
         self.assertEqual(options.topics, ["a", "b"])
         self.assertTrue(options.create_website)
+        self.assertFalse(options.enable_dependabot)
 
 
 class TestFastArgumentParsing(unittest.TestCase):
@@ -72,6 +75,26 @@ class TestFastArgumentParsing(unittest.TestCase):
         """Test --create-website flag."""
         options = parse_arguments(["repo", "--create-website"])
         self.assertTrue(options.create_website)
+
+    def test_no_dependabot_flag(self):
+        """Test --no-dependabot flag."""
+        options = parse_arguments(["repo", "--no-dependabot"])
+        self.assertFalse(options.enable_dependabot)
+
+    def test_dependabot_default_enabled(self):
+        """Test dependabot is enabled by default."""
+        options = parse_arguments(["repo"])
+        self.assertTrue(options.enable_dependabot)
+
+    def test_dry_run_flag(self):
+        """Test --dry-run flag."""
+        options = parse_arguments(["repo", "--dry-run"])
+        self.assertTrue(options.dry_run)
+
+    def test_dry_run_default_disabled(self):
+        """Test dry-run is disabled by default."""
+        options = parse_arguments(["repo"])
+        self.assertFalse(options.dry_run)
 
     def test_all_flags(self):
         """Test all flags together."""
@@ -148,6 +171,85 @@ class TestFastWorkflowGeneration(unittest.TestCase):
         self.assertIn("runs-on: ubuntu-latest", content)
         self.assertIn("checkout@v4", content)
         self.assertIn("echo", content)
+
+    def test_dependabot_config_content(self):
+        """Test dependabot configuration generation."""
+        command = GitHubInitCommand(GitHubInitOptions(
+            repo_name="test", 
+            gitignore="python",
+            enable_dependabot=True
+        ))
+        
+        with patch("pathlib.Path.mkdir"), patch("builtins.open", mock_open()) as mock_file:
+            command._create_dependabot_config()
+        
+        mock_file.assert_called_with(".github/dependabot.yml", "w")
+        written_content = mock_file().write.call_args[0][0]
+        
+        self.assertIn("version: 2", written_content)
+        self.assertIn("github-actions", written_content)
+        self.assertIn("pip", written_content)
+        self.assertIn("weekly", written_content)
+
+    def test_dry_run_execution(self):
+        """Test dry-run mode executes preview without side effects."""
+        command = GitHubInitCommand(GitHubInitOptions(
+            repo_name="test-dry",
+            dry_run=True,
+            license="MIT",
+            gitignore="python"
+        ))
+        
+        # Should not raise any exceptions and not create files
+        with patch("pathlib.Path.mkdir") as mock_mkdir:
+            with patch("builtins.open", mock_open()) as mock_file:
+                command.execute()
+                
+                # No actual file operations should occur in dry-run
+                mock_mkdir.assert_not_called()
+                mock_file.assert_not_called()
+
+    def test_rust_workflow_content(self):
+        """Test Rust CI workflow generation."""
+        content = self.command._get_rust_ci_workflow()
+
+        self.assertIn("dtolnay/rust-toolchain", content)
+        self.assertIn("cargo fmt", content)
+        self.assertIn("cargo clippy", content)
+        self.assertIn("cargo test", content)
+        self.assertIn("cargo build", content)
+        self.assertIn("rustfmt, clippy", content)
+
+    def test_go_workflow_content(self):
+        """Test Go CI workflow generation."""
+        content = self.command._get_go_ci_workflow()
+
+        self.assertIn("actions/setup-go", content)
+        self.assertIn("go mod download", content)
+        self.assertIn("gofmt", content)
+        self.assertIn("golangci-lint", content)
+        self.assertIn("go test", content)
+        self.assertIn("go build", content)
+
+    def test_java_workflow_content(self):
+        """Test Java CI workflow generation."""
+        content = self.command._get_java_ci_workflow()
+
+        self.assertIn("actions/setup-java", content)
+        self.assertIn("temurin", content)
+        self.assertIn("mvnw", content)
+        self.assertIn("mvn", content)
+        self.assertIn("surefire-reports", content)
+
+    def test_csharp_workflow_content(self):
+        """Test C#/.NET CI workflow generation."""
+        content = self.command._get_csharp_ci_workflow()
+
+        self.assertIn("actions/setup-dotnet", content)
+        self.assertIn("dotnet restore", content)
+        self.assertIn("dotnet build", content)
+        self.assertIn("dotnet test", content)
+        self.assertIn("codecov", content)
 
 
 class TestFastFileCreation(unittest.TestCase):

@@ -1,0 +1,61 @@
+# GitHub Init Configuration File
+# Copy this to ~/.github-init.yaml and customize your defaults
+#
+# All settings are optional - any setting not provided will use built-in defaults
+# Command line flags always override these defaults
+
+# Repository description template (can use placeholders later)
+description: ""
+
+# Repository visibility (true = private, false = public)
+private: true
+
+# Default license to apply (MIT, Apache-2.0, GPL-3.0, or empty for none)
+license: "MIT"
+
+# Default gitignore template (python, node, general, or empty for none)
+gitignore: "python"
+
+# Create README.md by default
+readme: true
+
+# Default branch name
+default_branch: "main"
+
+# Default topics to add to repositories (list of strings)
+topics:
+  - "python"
+  - "cli"
+  - "tool"
+
+# Create Docusaurus documentation website by default
+create_website: false
+
+# Enable dependabot by default
+enable_dependabot: true
+
+# Example configurations for different use cases:
+
+# Python developer defaults:
+# license: "MIT"
+# gitignore: "python"
+# topics: ["python", "library"]
+# enable_dependabot: true
+
+# Open source maintainer defaults:
+# private: false
+# license: "MIT"
+# create_website: true
+# topics: ["opensource", "library"]
+
+# Corporate developer defaults:
+# private: true
+# license: "Apache-2.0"
+# default_branch: "develop"
+# enable_dependabot: true
+
+# Documentation-focused defaults:
+# create_website: true
+# private: false
+# license: "MIT"
+# topics: ["documentation", "docs"]

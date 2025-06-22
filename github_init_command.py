@@ -8,6 +8,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
 
+try:
+    import yaml
+except ImportError:
+    yaml = None
+
 
 @dataclass
 class GitHubInitOptions:
@@ -22,6 +27,8 @@ class GitHubInitOptions:
     default_branch: str = "main"
     topics: Optional[List[str]] = None
     create_website: bool = False
+    enable_dependabot: bool = True  # Default to enabled
+    dry_run: bool = False  # Preview mode without execution
 
 
 class GitHubInitCommand:
@@ -30,9 +37,19 @@ class GitHubInitCommand:
     def __init__(self, options: GitHubInitOptions):
         self.options = options
         self.original_dir = os.getcwd()
+        self.created_files = []
+        self.created_dirs = []
+        self.github_repo_created = False
 
     def execute(self) -> None:
         """Execute the repository initialization process."""
+        if self.options.dry_run:
+            self._execute_dry_run()
+            return
+        
+        # Validate prerequisites before starting
+        self._validate_prerequisites()
+            
         try:
             print(f"🚀 Initializing GitHub repository: {self.options.repo_name}")
 
@@ -61,9 +78,176 @@ class GitHubInitCommand:
             print(f"✅ Successfully initialized repository: {self.options.repo_name}")
         except Exception as e:
             print(f"❌ Error initializing repository: {e}")
+            print("🔄 Rolling back changes...")
+            self._rollback_changes()
             raise
         finally:
             os.chdir(self.original_dir)
+
+    def _execute_dry_run(self) -> None:
+        """Preview what would be created without actually executing."""
+        print("🔍 DRY RUN MODE - Preview of repository initialization")
+        print("=" * 60)
+        print(f"📁 Repository: {self.options.repo_name}")
+        print(f"📄 Description: {self.options.description or 'None'}")
+        print(f"🔒 Visibility: {'Private' if self.options.private else 'Public'}")
+        print(f"📋 License: {self.options.license or 'None'}")
+        print(f"🗂️  Gitignore: {self.options.gitignore or 'None'}")
+        print(f"📖 README: {'Yes' if self.options.readme else 'No'}")
+        print(f"🌿 Default branch: {self.options.default_branch}")
+        print(f"🏷️  Topics: {', '.join(self.options.topics) if self.options.topics else 'None'}")
+        print(f"🌐 Website: {'Yes' if self.options.create_website else 'No'}")
+        print(f"🤖 Dependabot: {'Yes' if self.options.enable_dependabot else 'No'}")
+        
+        print("\n📝 Files that would be created:")
+        files_to_create = []
+        
+        # Git repository
+        files_to_create.append(f"  📁 {self.options.repo_name}/.git/ (git repository)")
+        
+        # README
+        if self.options.readme:
+            files_to_create.append(f"  📄 {self.options.repo_name}/README.md")
+        
+        # License
+        if self.options.license:
+            files_to_create.append(f"  📄 {self.options.repo_name}/LICENSE ({self.options.license})")
+        
+        # Gitignore
+        if self.options.gitignore:
+            files_to_create.append(f"  📄 {self.options.repo_name}/.gitignore ({self.options.gitignore} template)")
+        
+        # GitHub workflows
+        files_to_create.append(f"  📄 {self.options.repo_name}/.github/workflows/ci.yml")
+        
+        # Docusaurus files
+        if self.options.create_website:
+            files_to_create.extend([
+                f"  📄 {self.options.repo_name}/package.json",
+                f"  📄 {self.options.repo_name}/docusaurus.config.js",
+                f"  📄 {self.options.repo_name}/sidebars.js",
+                f"  📁 {self.options.repo_name}/docs/",
+                f"  📄 {self.options.repo_name}/docs/intro.md",
+                f"  📄 {self.options.repo_name}/.github/workflows/deploy-docusaurus.yml",
+                f"  📄 {self.options.repo_name}/.github/workflows/pr-preview.yml"
+            ])
+        
+        # Dependabot
+        if self.options.enable_dependabot:
+            files_to_create.append(f"  📄 {self.options.repo_name}/.github/dependabot.yml")
+        
+        for file_item in files_to_create:
+            print(file_item)
+        
+        print("\n⚡ Actions that would be performed:")
+        actions = [
+            f"  1. Create local directory: {self.options.repo_name}/",
+            f"  2. Initialize git repository with branch: {self.options.default_branch}",
+            f"  3. Create {len([f for f in files_to_create if '📄' in f])} files",
+            f"  4. Create GitHub repository ({'private' if self.options.private else 'public'})",
+        ]
+        
+        if self.options.topics:
+            actions.append(f"  5. Add topics: {', '.join(self.options.topics)}")
+        
+        actions.extend([
+            f"  6. Configure git remote origin",
+            f"  7. Create initial commit with all files",
+            f"  8. Push to GitHub ({self.options.default_branch} branch)"
+        ])
+        
+        for action in actions:
+            print(action)
+        
+        print("\n" + "=" * 60)
+        print("💡 This was a preview only. No files were created or modified.")
+        print("💡 Remove --dry-run flag to actually create the repository.")
+
+    def _validate_prerequisites(self) -> None:
+        """Validate required tools and authentication."""
+        print("🔍 Validating prerequisites...")
+        
+        # Check if git is available
+        try:
+            result = subprocess.run(["git", "--version"], capture_output=True, text=True, check=True)
+            print(f"✅ Git is available: {result.stdout.strip()}")
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            raise RuntimeError("❌ Git is not installed or not available in PATH. Please install Git first.")
+        
+        # Check if GitHub CLI is available
+        try:
+            result = subprocess.run(["gh", "--version"], capture_output=True, text=True, check=True)
+            version_line = result.stdout.split('\n')[0]
+            print(f"✅ GitHub CLI is available: {version_line}")
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            raise RuntimeError("❌ GitHub CLI (gh) is not installed. Please install it from https://cli.github.com/")
+        
+        # Check GitHub CLI authentication
+        try:
+            result = subprocess.run(["gh", "auth", "status"], capture_output=True, text=True, check=True)
+            print("✅ GitHub CLI is authenticated")
+        except subprocess.CalledProcessError as e:
+            error_output = e.stderr.lower()
+            if "not logged into" in error_output or "not authenticated" in error_output:
+                raise RuntimeError("❌ GitHub CLI is not authenticated. Please run 'gh auth login' first.")
+            else:
+                raise RuntimeError(f"❌ GitHub CLI authentication check failed: {e.stderr}")
+        
+        # Check repository creation permissions
+        try:
+            result = subprocess.run(
+                ["gh", "api", "user"], 
+                capture_output=True, 
+                text=True, 
+                check=True
+            )
+            print("✅ GitHub API access confirmed")
+        except subprocess.CalledProcessError:
+            raise RuntimeError("❌ Cannot access GitHub API. Check your authentication and permissions.")
+        
+        # Check for Node.js if website creation is requested
+        if self.options.create_website:
+            try:
+                result = subprocess.run(["node", "--version"], capture_output=True, text=True, check=True)
+                version = result.stdout.strip()
+                major_version = int(version.lstrip('v').split('.')[0])
+                if major_version < 18:
+                    raise RuntimeError(f"❌ Node.js version {version} is too old. Docusaurus requires Node.js 18+")
+                print(f"✅ Node.js is available: {version}")
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                raise RuntimeError("❌ Node.js is not installed. Required for --create-website option.")
+            except ValueError:
+                print("⚠️  Could not parse Node.js version, but it seems to be installed")
+
+    def _rollback_changes(self) -> None:
+        """Rollback any changes made during failed initialization."""
+        try:
+            # Delete GitHub repository if it was created
+            if self.github_repo_created:
+                try:
+                    print(f"🗑️  Deleting GitHub repository: {self.options.repo_name}")
+                    subprocess.run(
+                        ["gh", "repo", "delete", self.options.repo_name, "--yes"],
+                        capture_output=True,
+                        check=True
+                    )
+                    print("✅ GitHub repository deleted")
+                except subprocess.CalledProcessError as e:
+                    print(f"⚠️  Could not delete GitHub repository: {e}")
+
+            # Delete local directory if it was created
+            repo_path = Path(self.options.repo_name)
+            if repo_path.exists():
+                try:
+                    print(f"🗑️  Deleting local directory: {repo_path}")
+                    import shutil
+                    shutil.rmtree(repo_path)
+                    print("✅ Local directory deleted")
+                except Exception as e:
+                    print(f"⚠️  Could not delete local directory: {e}")
+
+        except Exception as e:
+            print(f"⚠️  Error during rollback: {e}")
 
     def _init_git_repo(self) -> None:
         """Initialize local git repository."""
@@ -253,6 +437,186 @@ logs/
 *.temp
 tmp/
 temp/""",
+            "rust": """# Generated by Cargo
+/target/
+**/*.rs.bk
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment files
+.env
+
+# Lock file (optional to ignore)
+# Cargo.lock""",
+            "go": """# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment files
+.env""",
+            "java": """# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+replay_pid*
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle
+build/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# IDE files
+.vscode/
+.idea/
+*.iws
+*.iml
+*.ipr
+.settings/
+.project
+.classpath
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env""",
+            "csharp": """# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+
+# Visual Studio files
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.vsp
+*.vspx
+*.sap
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NUnit
+*.VisualState.xml
+TestResult.xml
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# IDE files
+.vscode/
+.vs/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Package files
+*.nupkg
+*.snupkg
+
+# Environment files
+.env""",
         }
 
         template = gitignore_templates.get(
@@ -278,6 +642,10 @@ temp/""",
             self._create_docusaurus_deploy_workflow()
             self._create_pr_preview_workflow()
 
+        # Create dependabot configuration if enabled
+        if self.options.enable_dependabot:
+            self._create_dependabot_config()
+
     def _create_ci_workflow(self) -> None:
         """Create basic CI workflow based on project type."""
         # Determine workflow content based on gitignore/language and website option
@@ -287,6 +655,14 @@ temp/""",
             ci_content = self._get_python_ci_workflow()
         elif self.options.gitignore == "node":
             ci_content = self._get_node_ci_workflow()
+        elif self.options.gitignore == "rust":
+            ci_content = self._get_rust_ci_workflow()
+        elif self.options.gitignore == "go":
+            ci_content = self._get_go_ci_workflow()
+        elif self.options.gitignore == "java":
+            ci_content = self._get_java_ci_workflow()
+        elif self.options.gitignore == "csharp":
+            ci_content = self._get_csharp_ci_workflow()
         else:
             ci_content = self._get_generic_ci_workflow()
 
@@ -495,6 +871,242 @@ jobs:
     #   run: npm run lint
 """
 
+    def _get_rust_ci_workflow(self) -> str:
+        """Get Rust-specific CI workflow."""
+        return """name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: [stable, beta, nightly]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: ${{ matrix.rust }}
+        components: rustfmt, clippy
+    
+    - name: Cache cargo dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+    
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+    
+    - name: Lint with clippy
+      run: cargo clippy --all-targets --all-features -- -D warnings
+    
+    - name: Run tests
+      run: cargo test --all-features
+    
+    - name: Build
+      run: cargo build --release --all-features
+"""
+
+    def _get_go_ci_workflow(self) -> str:
+        """Get Go-specific CI workflow."""
+        return """name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.20', '1.21', '1.22']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+    
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    
+    - name: Download dependencies
+      run: go mod download
+    
+    - name: Verify dependencies
+      run: go mod verify
+    
+    - name: Format check
+      run: |
+        if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+          echo "Code is not formatted. Please run 'go fmt ./...'"
+          gofmt -s -l .
+          exit 1
+        fi
+    
+    - name: Lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+    
+    - name: Run tests
+      run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+    
+    - name: Build
+      run: go build -v ./...
+"""
+
+    def _get_java_ci_workflow(self) -> str:
+        """Get Java-specific CI workflow."""
+        return """name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: ['11', '17', '21']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK ${{ matrix.java-version }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ matrix.java-version }}
+        distribution: 'temurin'
+    
+    - name: Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-m2-
+    
+    - name: Validate Maven wrapper
+      run: |
+        if [ -f mvnw ]; then
+          chmod +x mvnw
+          ./mvnw validate
+        fi
+    
+    - name: Compile
+      run: |
+        if [ -f mvnw ]; then
+          ./mvnw clean compile
+        else
+          mvn clean compile
+        fi
+    
+    - name: Run tests
+      run: |
+        if [ -f mvnw ]; then
+          ./mvnw test
+        else
+          mvn test
+        fi
+    
+    - name: Package
+      run: |
+        if [ -f mvnw ]; then
+          ./mvnw package -DskipTests
+        else
+          mvn package -DskipTests
+        fi
+    
+    - name: Upload test reports
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: test-reports-${{ matrix.java-version }}
+        path: target/surefire-reports/
+"""
+
+    def _get_csharp_ci_workflow(self) -> str:
+        """Get C#/.NET-specific CI workflow."""
+        return """name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: ['6.0.x', '7.0.x', '8.0.x']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+    
+    - name: Cache NuGet packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+    
+    - name: Run tests
+      run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      if: matrix.dotnet-version == '8.0.x'
+      with:
+        file: '**/coverage.cobertura.xml'
+        fail_ci_if_error: false
+"""
+
     def _create_docusaurus_deploy_workflow(self) -> None:
         """Create Docusaurus deployment workflow."""
         deploy_content = """name: Deploy Docusaurus to GitHub Pages
@@ -619,6 +1231,84 @@ jobs:
 
         with open(".github/workflows/pr-preview.yml", "w") as f:
             f.write(preview_content)
+
+    def _create_dependabot_config(self) -> None:
+        """Create dependabot configuration for automatic dependency updates."""
+        print("🔧 Creating dependabot configuration...")
+
+        # Determine package ecosystems based on project type
+        ecosystems = []
+        
+        # Always include GitHub Actions
+        ecosystems.append({
+            "package-ecosystem": "github-actions",
+            "directory": "/",
+            "schedule": {"interval": "weekly"},
+            "open-pull-requests-limit": 5
+        })
+        
+        # Add ecosystems based on gitignore/project type
+        if self.options.gitignore == "python" or self.options.create_website:
+            if self.options.gitignore == "python":
+                ecosystems.append({
+                    "package-ecosystem": "pip",
+                    "directory": "/",
+                    "schedule": {"interval": "weekly"},
+                    "open-pull-requests-limit": 5
+                })
+            
+            if self.options.create_website:
+                ecosystems.append({
+                    "package-ecosystem": "npm",
+                    "directory": "/",
+                    "schedule": {"interval": "weekly"},
+                    "open-pull-requests-limit": 5
+                })
+        
+        elif self.options.gitignore == "node":
+            ecosystems.append({
+                "package-ecosystem": "npm",
+                "directory": "/",
+                "schedule": {"interval": "weekly"},
+                "open-pull-requests-limit": 5
+            })
+        
+        # If no specific gitignore, try to detect from files or use generic
+        if not self.options.gitignore:
+            # Check for common files to determine ecosystem
+            if Path("package.json").exists() or Path("package-lock.json").exists():
+                ecosystems.append({
+                    "package-ecosystem": "npm",
+                    "directory": "/",
+                    "schedule": {"interval": "weekly"},
+                    "open-pull-requests-limit": 5
+                })
+            if (Path("requirements.txt").exists() or Path("pyproject.toml").exists() or 
+                Path("setup.py").exists() or Path("Pipfile").exists()):
+                ecosystems.append({
+                    "package-ecosystem": "pip",
+                    "directory": "/",
+                    "schedule": {"interval": "weekly"},
+                    "open-pull-requests-limit": 5
+                })
+
+        dependabot_config = f"""version: 2
+updates:"""
+        
+        for ecosystem in ecosystems:
+            dependabot_config += f"""
+  - package-ecosystem: "{ecosystem['package-ecosystem']}"
+    directory: "{ecosystem['directory']}"
+    schedule:
+      interval: "{ecosystem['schedule']['interval']}"
+    open-pull-requests-limit: {ecosystem['open-pull-requests-limit']}"""
+
+        # Create .github directory if it doesn't exist
+        github_dir = Path(".github")
+        github_dir.mkdir(exist_ok=True)
+        
+        with open(".github/dependabot.yml", "w") as f:
+            f.write(dependabot_config)
 
     def _create_license(self) -> None:
         """Create LICENSE file."""
@@ -1214,6 +1904,7 @@ yarn-error.log*
 
         try:
             subprocess.run(cmd, check=True)
+            self.github_repo_created = True  # Track that repo was created
             # Get current GitHub user
             result = subprocess.run(
                 ["gh", "api", "user", "--jq", ".login"],
@@ -1261,10 +1952,57 @@ yarn-error.log*
             )
 
 
+def load_config_defaults() -> Dict[str, any]:
+    """Load default configuration from ~/.github-init.yaml"""
+    config_path = Path.home() / ".github-init.yaml"
+    
+    if not config_path.exists():
+        return {}
+    
+    if yaml is None:
+        print("⚠️  Warning: PyYAML not installed. Install with 'pip install PyYAML' to use config files.")
+        return {}
+    
+    try:
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f) or {}
+        
+        # Validate configuration keys
+        valid_keys = {
+            'description', 'private', 'license', 'gitignore', 'readme', 
+            'default_branch', 'topics', 'create_website', 'enable_dependabot'
+        }
+        
+        # Filter out invalid keys and warn
+        filtered_config = {}
+        for key, value in config.items():
+            if key in valid_keys:
+                filtered_config[key] = value
+            else:
+                print(f"⚠️  Warning: Unknown config key '{key}' in ~/.github-init.yaml")
+        
+        return filtered_config
+        
+    except Exception as e:
+        # Handle both YAML errors and file I/O errors
+        error_name = type(e).__name__
+        if yaml and hasattr(yaml, 'YAMLError') and error_name == 'YAMLError':
+            print(f"⚠️  Warning: Error parsing ~/.github-init.yaml: {e}")
+        else:
+            print(f"⚠️  Warning: Error reading ~/.github-init.yaml: {e}")
+        return {}
+
+
 def get_interactive_options() -> GitHubInitOptions:
     """Get repository options through interactive prompts."""
     print("🔧 Interactive GitHub Repository Setup")
     print("=" * 40)
+    
+    # Load configuration defaults
+    config = load_config_defaults()
+    if config:
+        print(f"📁 Loaded defaults from ~/.github-init.yaml")
+        print("=" * 40)
 
     # Repository name (required)
     while True:
@@ -1274,12 +2012,16 @@ def get_interactive_options() -> GitHubInitOptions:
         print("Repository name is required.")
 
     # Description (optional)
-    description_input = input(f"Description (optional): ").strip()
-    description: Optional[str] = description_input if description_input else None
+    default_desc = config.get('description', '')
+    desc_prompt = f"Description (optional{', default: ' + default_desc if default_desc else ''}): "
+    description_input = input(desc_prompt).strip()
+    description: Optional[str] = description_input if description_input else (default_desc if default_desc else None)
 
     # Public/private
+    default_private = config.get('private', True)
+    visibility_default = "y/N" if default_private else "Y/n"
     while True:
-        visibility = input("Make repository public? (y/N): ").strip().lower()
+        visibility = input(f"Make repository public? ({visibility_default}): ").strip().lower()
         if visibility in ["", "n", "no"]:
             private = True
             break
@@ -1287,30 +2029,40 @@ def get_interactive_options() -> GitHubInitOptions:
             private = False
             break
         print("Please enter 'y' for yes or 'n' for no.")
+    
+    # Apply default if no input provided
+    if not visibility:
+        private = default_private
 
     # License
+    default_license = config.get('license', '')
     print("\nAvailable licenses: MIT, Apache-2.0, GPL-3.0")
+    license_prompt = f"License (optional{', default: ' + default_license if default_license else ''}): "
     license_choice: Optional[str] = None
     while True:
-        license_input = input("License (optional): ").strip()
+        license_input = input(license_prompt).strip()
         if not license_input or license_input in ["MIT", "Apache-2.0", "GPL-3.0"]:
-            license_choice = license_input if license_input else None
+            license_choice = license_input if license_input else (default_license if default_license else None)
             break
         print("Please enter a valid license: MIT, Apache-2.0, GPL-3.0, or leave empty.")
 
     # Gitignore template
-    print("\nAvailable gitignore templates: python, node, general")
+    default_gitignore = config.get('gitignore', '')
+    print("\nAvailable gitignore templates: python, node, rust, go, java, csharp, general")
+    gitignore_prompt = f"Gitignore template (optional{', default: ' + default_gitignore if default_gitignore else ''}): "
     gitignore: Optional[str] = None
     while True:
-        gitignore_input = input("Gitignore template (optional): ").strip()
-        if not gitignore_input or gitignore_input in ["python", "node", "general"]:
-            gitignore = gitignore_input if gitignore_input else None
+        gitignore_input = input(gitignore_prompt).strip()
+        if not gitignore_input or gitignore_input in ["python", "node", "rust", "go", "java", "csharp", "general"]:
+            gitignore = gitignore_input if gitignore_input else (default_gitignore if default_gitignore else None)
             break
-        print("Please enter a valid template: python, node, general, or leave empty.")
+        print("Please enter a valid template: python, node, rust, go, java, csharp, general, or leave empty.")
 
     # README
+    default_readme = config.get('readme', True)
+    readme_default = "Y/n" if default_readme else "y/N"
     while True:
-        create_readme = input("Create README.md? (Y/n): ").strip().lower()
+        create_readme = input(f"Create README.md? ({readme_default}): ").strip().lower()
         if create_readme in ["", "y", "yes"]:
             readme = True
             break
@@ -1318,23 +2070,33 @@ def get_interactive_options() -> GitHubInitOptions:
             readme = False
             break
         print("Please enter 'y' for yes or 'n' for no.")
+    
+    # Apply default if no input provided
+    if not create_readme:
+        readme = default_readme
 
     # Default branch
-    default_branch = input("Default branch name (main): ").strip()
-    default_branch = default_branch if default_branch else "main"
+    config_branch = config.get('default_branch', 'main')
+    branch_prompt = f"Default branch name ({config_branch}): "
+    default_branch = input(branch_prompt).strip()
+    default_branch = default_branch if default_branch else config_branch
 
     # Topics
-    topics_input = input("Topics (comma-separated, optional): ").strip()
-    topics = (
-        [t.strip() for t in topics_input.split(",") if t.strip()]
-        if topics_input
-        else None
-    )
+    default_topics = config.get('topics', [])
+    topics_default = ', '.join(default_topics) if default_topics else ''
+    topics_prompt = f"Topics (comma-separated{', default: ' + topics_default if topics_default else ''}): "
+    topics_input = input(topics_prompt).strip()
+    if topics_input:
+        topics = [t.strip() for t in topics_input.split(",") if t.strip()]
+    else:
+        topics = default_topics if default_topics else None
 
     # Website creation
+    default_website = config.get('create_website', False)
+    website_default = "Y/n" if default_website else "y/N"
     while True:
         create_website = (
-            input("Create Docusaurus documentation website? (y/N): ").strip().lower()
+            input(f"Create Docusaurus documentation website? ({website_default}): ").strip().lower()
         )
         if create_website in ["", "n", "no"]:
             website = False
@@ -1343,6 +2105,29 @@ def get_interactive_options() -> GitHubInitOptions:
             website = True
             break
         print("Please enter 'y' for yes or 'n' for no.")
+    
+    # Apply default if no input provided
+    if not create_website:
+        website = default_website
+
+    # Dependabot configuration
+    default_dependabot = config.get('enable_dependabot', True)
+    dependabot_default = "Y/n" if default_dependabot else "y/N"
+    while True:
+        enable_dependabot = (
+            input(f"Enable dependabot for dependency updates? ({dependabot_default}): ").strip().lower()
+        )
+        if enable_dependabot in ["", "y", "yes"]:
+            dependabot = True
+            break
+        elif enable_dependabot in ["n", "no"]:
+            dependabot = False
+            break
+        print("Please enter 'y' for yes or 'n' for no.")
+    
+    # Apply default if no input provided
+    if not enable_dependabot:
+        dependabot = default_dependabot
 
     options = GitHubInitOptions(
         repo_name=repo_name,
@@ -1354,6 +2139,8 @@ def get_interactive_options() -> GitHubInitOptions:
         default_branch=default_branch,
         topics=topics,
         create_website=website,
+        enable_dependabot=dependabot,
+        dry_run=False,  # Interactive mode doesn't use dry-run
     )
 
     # Show preview
@@ -1369,6 +2156,7 @@ def get_interactive_options() -> GitHubInitOptions:
     print(f"Default branch: {options.default_branch}")
     print(f"Topics: {', '.join(options.topics) if options.topics else 'None'}")
     print(f"Website: {'Yes' if options.create_website else 'No'}")
+    print(f"Dependabot: {'Yes' if options.enable_dependabot else 'No'}")
 
     # Confirm
     while True:
@@ -1409,7 +2197,7 @@ def parse_arguments(args: List[str]) -> GitHubInitOptions:
     )
     parser.add_argument(
         "--gitignore",
-        choices=["python", "node", "general"],
+        choices=["python", "node", "rust", "go", "java", "csharp", "general"],
         help="Add .gitignore file with template",
     )
     parser.add_argument(
@@ -1431,6 +2219,16 @@ def parse_arguments(args: List[str]) -> GitHubInitOptions:
         action="store_true",
         help="Initialize a Docusaurus documentation website",
     )
+    parser.add_argument(
+        "--no-dependabot",
+        action="store_true",
+        help="Disable dependabot configuration (enabled by default)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview changes without executing (dry run mode)",
+    )
 
     parsed = parser.parse_args(args)
 
@@ -1438,16 +2236,21 @@ def parse_arguments(args: List[str]) -> GitHubInitOptions:
     if not parsed.repo_name or parsed.interactive:
         return get_interactive_options()
 
+    # Load config defaults for CLI mode too
+    config = load_config_defaults()
+
     return GitHubInitOptions(
         repo_name=parsed.repo_name,
-        description=parsed.description,
-        private=not parsed.public,  # Default to private
-        license=parsed.license,
-        gitignore=parsed.gitignore,
-        readme=parsed.readme,
-        default_branch=parsed.default_branch,
-        topics=parsed.topics.split(",") if parsed.topics else None,
-        create_website=parsed.create_website,
+        description=parsed.description or config.get('description'),
+        private=not parsed.public if parsed.public else config.get('private', True),
+        license=parsed.license or config.get('license'),
+        gitignore=parsed.gitignore or config.get('gitignore'),
+        readme=parsed.readme if hasattr(parsed, 'readme') else config.get('readme', True),
+        default_branch=parsed.default_branch or config.get('default_branch', 'main'),
+        topics=parsed.topics.split(",") if parsed.topics else config.get('topics'),
+        create_website=parsed.create_website or config.get('create_website', False),
+        enable_dependabot=not parsed.no_dependabot if parsed.no_dependabot else config.get('enable_dependabot', True),
+        dry_run=parsed.dry_run,
     )
 
 

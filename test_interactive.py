@@ -27,6 +27,7 @@ class TestInteractiveMode(unittest.TestCase):
             "",  # default branch (empty = main)
             "",  # topics (empty)
             "n",  # create website (no)
+            "y",  # enable dependabot (yes, default)
             "y",  # confirm
         ]
 
@@ -41,6 +42,7 @@ class TestInteractiveMode(unittest.TestCase):
         self.assertEqual(options.default_branch, "main")
         self.assertIsNone(options.topics)
         self.assertFalse(options.create_website)
+        self.assertTrue(options.enable_dependabot)
 
     @patch("builtins.input")
     def test_interactive_full_options(self, mock_input):
@@ -55,6 +57,7 @@ class TestInteractiveMode(unittest.TestCase):
             "develop",  # default branch
             "python,testing,cli",  # topics
             "y",  # create website (yes)
+            "n",  # enable dependabot (no)
             "y",  # confirm
         ]
 
@@ -69,6 +72,7 @@ class TestInteractiveMode(unittest.TestCase):
         self.assertEqual(options.default_branch, "develop")
         self.assertEqual(options.topics, ["python", "testing", "cli"])
         self.assertTrue(options.create_website)
+        self.assertFalse(options.enable_dependabot)
 
     @patch("builtins.input")
     def test_interactive_invalid_inputs_retry(self, mock_input):
@@ -89,6 +93,8 @@ class TestInteractiveMode(unittest.TestCase):
             "test,example",  # topics
             "maybe",  # invalid website response
             "n",  # valid website response
+            "maybe",  # invalid dependabot response
+            "y",  # valid dependabot response
             "y",  # confirm
         ]
 
@@ -101,6 +107,7 @@ class TestInteractiveMode(unittest.TestCase):
         self.assertFalse(options.readme)
         self.assertEqual(options.topics, ["test", "example"])
         self.assertFalse(options.create_website)
+        self.assertTrue(options.enable_dependabot)
 
     @patch("builtins.exit")
     @patch("builtins.input")
@@ -119,6 +126,7 @@ class TestInteractiveMode(unittest.TestCase):
             "",  # branch (default main)
             "",  # topics
             "",  # website (default no)
+            "",  # dependabot (default yes)
             "n",  # do not confirm - should abort
         ]
 

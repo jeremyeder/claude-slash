@@ -33,7 +33,21 @@ class TestFastIntegration(unittest.TestCase):
         """Test complete private repository creation flow."""
         # Setup mocks
         mock_exists.return_value = False
-        mock_run.return_value = MagicMock(returncode=0)
+        
+        def mock_subprocess_run(*args, **kwargs):
+            result = MagicMock(returncode=0)
+            cmd = args[0] if args else []
+            
+            if "git" in cmd and "--version" in cmd:
+                result.stdout = "git version 2.34.1"
+            elif "gh" in cmd and "--version" in cmd:
+                result.stdout = "gh version 2.40.1 (2023-12-13)"
+            else:
+                result.stdout = ""
+            
+            return result
+        
+        mock_run.side_effect = mock_subprocess_run
 
         options = GitHubInitOptions(
             repo_name="test-private-repo",
@@ -81,7 +95,23 @@ class TestFastIntegration(unittest.TestCase):
         """Test complete repository creation with Docusaurus website."""
         # Setup mocks
         mock_exists.return_value = False
-        mock_run.return_value = MagicMock(returncode=0)
+        
+        def mock_subprocess_run(*args, **kwargs):
+            result = MagicMock(returncode=0)
+            cmd = args[0] if args else []
+            
+            if "git" in cmd and "--version" in cmd:
+                result.stdout = "git version 2.34.1"
+            elif "gh" in cmd and "--version" in cmd:
+                result.stdout = "gh version 2.40.1 (2023-12-13)"
+            elif "node" in cmd and "--version" in cmd:
+                result.stdout = "v20.10.0"  # Valid Node.js version for Docusaurus
+            else:
+                result.stdout = ""
+            
+            return result
+        
+        mock_run.side_effect = mock_subprocess_run
 
         options = GitHubInitOptions(
             repo_name="test-docs-repo",
@@ -126,7 +156,21 @@ class TestFastIntegration(unittest.TestCase):
         """Test minimal repository creation with defaults."""
         # Setup mocks
         mock_exists.return_value = False
-        mock_run.return_value = MagicMock(returncode=0)
+        
+        def mock_subprocess_run(*args, **kwargs):
+            result = MagicMock(returncode=0)
+            cmd = args[0] if args else []
+            
+            if "git" in cmd and "--version" in cmd:
+                result.stdout = "git version 2.34.1"
+            elif "gh" in cmd and "--version" in cmd:
+                result.stdout = "gh version 2.40.1 (2023-12-13)"
+            else:
+                result.stdout = ""
+            
+            return result
+        
+        mock_run.side_effect = mock_subprocess_run
 
         options = GitHubInitOptions(repo_name="minimal-repo")
         command = GitHubInitCommand(options)
