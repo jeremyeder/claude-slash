@@ -6,8 +6,8 @@ Custom slash commands for Claude Code CLI. This repository provides a collection
 
 - **📋 `/project:checkpoint`** - Save session state for future restoration
 - **⚡ `/project:ckpt`** - Shorthand alias for checkpoint command
-- **🔄 `/project:update`** - Update commands to latest release
-- **⬆️ `/project:up`** - Shorthand alias for update command
+- **🔄 `/project:restore`** - Restore session from checkpoint file
+- **⬆️ `/project:rst`** - Shorthand alias for restore command
 
 ## Quick Install
 
@@ -59,16 +59,19 @@ Create a checkpoint of your current Claude Code session:
 /project:ckpt "Quick save"
 ```
 
-### Update Command
+### Restore Command
 
-Keep your commands up to date with the latest releases:
+Restore a Claude Code session from a previously created checkpoint:
 
 ```bash
-# Update to latest release
-/project:update
+# Restore from latest checkpoint
+/project:restore
+
+# Restore from specific checkpoint file
+/project:restore checkpoint-2024-07-03-10-30-00.json
 
 # Shorthand version
-/project:up
+/project:rst
 ```
 
 #### What Gets Saved
@@ -87,6 +90,16 @@ Checkpoints are stored in your git repository at:
 
 #### Restoring a Checkpoint
 
+**Automated Restoration** (Recommended):
+```bash
+# Restore latest checkpoint automatically
+/project:restore
+
+# Restore specific checkpoint
+/project:restore checkpoint-2024-07-03-10-30-00.json
+```
+
+**Manual Restoration** (Alternative):
 1. Share the checkpoint JSON file with Claude in a new session
 2. Claude will help restore the context and working state
 3. Navigate to the correct directory and git branch as indicated
@@ -96,7 +109,7 @@ Checkpoints are stored in your git repository at:
 | Command | Alias | Description |
 |---------|--------|-------------|
 | `/project:checkpoint [description]` | `/project:ckpt` | Create a session checkpoint |
-| `/project:update` | `/project:up` | Update commands to latest release |
+| `/project:restore [checkpoint_file]` | `/project:rst` | Restore from checkpoint (latest if no file specified) |
 
 ## How It Works
 
@@ -167,9 +180,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 Keep your commands current with the latest features:
 
 ```bash
-# Update via slash command (recommended)
-/project:update
-
 # Update via install script
 curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash -s -- --update
 ```
@@ -192,9 +202,9 @@ This triggers GitHub Actions to:
 ## Roadmap
 
 - [x] Session checkpoint and restoration
-- [x] Automatic update system
-- [x] GitHub releases integration
-- [ ] Restore command to load checkpoints
+- [x] Automated restore command with checkpoint file override
+- [x] Comprehensive test suite with 28+ test cases
+- [x] Safety checks and git integration
 - [ ] Project templates and scaffolding
 - [ ] Git workflow helpers
 - [ ] Development environment setup commands
