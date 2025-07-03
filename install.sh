@@ -14,7 +14,8 @@ NC='\033[0m' # No Color
 
 # GitHub repository details
 REPO_URL="https://raw.githubusercontent.com/jeremyeder/claude-slash/main"
-COMMANDS=("checkpoint.md" "ckpt.md")
+API_URL="https://api.github.com/repos/jeremyeder/claude-slash"
+COMMANDS=("checkpoint.md" "ckpt.md" "update.md" "up.md")
 
 # Print colored output
 print_status() {
@@ -64,6 +65,94 @@ install_project() {
     print_status "Available commands:"
     echo "  • /project:checkpoint [description] - Create a session checkpoint"
     echo "  • /project:ckpt [description] - Shorthand alias"
+    echo "  • /project:update - Update commands to latest release"
+    echo "  • /project:up - Shorthand alias for update"
+}
+
+# Update existing installation
+update_installation() {
+    print_status "🔄 Updating claude-slash commands..."
+    
+    # Determine installation location
+    local install_dir=""
+    local install_type=""
+    
+    if [ -d ".claude/commands" ]; then
+        install_dir=".claude/commands"
+        install_type="project"
+    elif [ -d "$HOME/.claude/commands" ]; then
+        install_dir="$HOME/.claude/commands"
+        install_type="global"
+    else
+        print_error "No claude-slash installation found"
+        print_status "Run the installer first: $0"
+        exit 1
+    fi
+    
+    print_status "Found $install_type installation at: $install_dir"
+    
+    # Check for latest release
+    print_status "🔍 Checking latest release..."
+    local latest_info
+    latest_info=$(curl -s "$API_URL/releases/latest")
+    if [ $? -ne 0 ]; then
+        print_error "Failed to check for updates (network error)"
+        exit 1
+    fi
+    
+    local latest_tag
+    latest_tag=$(echo "$latest_info" | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+    
+    if [ -z "$latest_tag" ]; then
+        print_error "Could not determine latest version"
+        exit 1
+    fi
+    
+    print_status "📦 Latest release: $latest_tag"
+    
+    # Create backup
+    local backup_dir="$install_dir.backup.$(date +%Y%m%d-%H%M%S)"
+    print_status "💾 Creating backup at: $backup_dir"
+    cp -r "$install_dir" "$backup_dir"
+    
+    # Download and extract latest release
+    local temp_dir
+    temp_dir=$(mktemp -d)
+    print_status "⬇️  Downloading latest release..."
+    
+    if ! curl -sL "$API_URL/tarball/$latest_tag" | tar -xz -C "$temp_dir" --strip-components=1; then
+        print_error "Failed to download release"
+        print_status "🔄 Restoring from backup..."
+        rm -rf "$install_dir"
+        mv "$backup_dir" "$install_dir"
+        rm -rf "$temp_dir"
+        exit 1
+    fi
+    
+    # Update commands
+    if [ -d "$temp_dir/.claude/commands" ]; then
+        print_status "🔄 Updating commands..."
+        
+        # Remove old commands
+        find "$install_dir" -name "*.md" -delete
+        
+        # Copy new commands
+        cp "$temp_dir/.claude/commands/"*.md "$install_dir/"
+        
+        print_success "✅ Update completed successfully!"
+        print_status "📦 Updated to: $latest_tag"
+        print_status "📁 Backup saved to: $backup_dir"
+        print_status "🗑️  Remove backup with: rm -rf $backup_dir"
+        
+    else
+        print_error "Downloaded release doesn't contain command files"
+        print_status "🔄 Restoring from backup..."
+        rm -rf "$install_dir"
+        mv "$backup_dir" "$install_dir"
+    fi
+    
+    # Cleanup
+    rm -rf "$temp_dir"
 }
 
 # Install commands to user directory
@@ -88,6 +177,8 @@ install_user() {
     print_status "Available commands:"
     echo "  • /user:checkpoint [description] - Create a session checkpoint"
     echo "  • /user:ckpt [description] - Shorthand alias"
+    echo "  • /user:update - Update commands to latest release"
+    echo "  • /user:up - Shorthand alias for update"
 }
 
 # Main installation logic
@@ -130,7 +221,7 @@ main() {
     print_status "Next steps:"
     echo "1. Open Claude Code CLI in your project"
     echo "2. Try: /project:checkpoint \"Test checkpoint\""
-    echo "3. Your checkpoint will be saved for future sessions"
+    echo "3. Update anytime with: /project:update"
     echo
     print_status "For more information, visit:"
     echo "https://github.com/jeremyeder/claude-slash"
@@ -142,13 +233,18 @@ case "${1:-}" in
         echo "Usage: $0 [OPTIONS]"
         echo
         echo "Options:"
+        echo "  --update    Update existing installation to latest release"
         echo "  --global    Install to personal directory (~/.claude/commands/)"
         echo "  --help      Show this help message"
         echo
         echo "Examples:"
         echo "  $0                    # Install to current project"
         echo "  $0 --global          # Install for personal use"
+        echo "  $0 --update          # Update existing installation"
         exit 0
+        ;;
+    --update)
+        update_installation
         ;;
     *)
         main "$@"

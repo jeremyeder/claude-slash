@@ -6,6 +6,8 @@ Custom slash commands for Claude Code CLI. This repository provides a collection
 
 - **📋 `/project:checkpoint`** - Save session state for future restoration
 - **⚡ `/project:ckpt`** - Shorthand alias for checkpoint command
+- **🔄 `/project:update`** - Update commands to latest release
+- **⬆️ `/project:up`** - Shorthand alias for update command
 
 ## Quick Install
 
@@ -57,6 +59,18 @@ Create a checkpoint of your current Claude Code session:
 /project:ckpt "Quick save"
 ```
 
+### Update Command
+
+Keep your commands up to date with the latest releases:
+
+```bash
+# Update to latest release
+/project:update
+
+# Shorthand version
+/project:up
+```
+
 #### What Gets Saved
 
 - **Git Information**: Current branch, commit hash, status
@@ -82,6 +96,7 @@ Checkpoints are stored in your git repository at:
 | Command | Alias | Description |
 |---------|--------|-------------|
 | `/project:checkpoint [description]` | `/project:ckpt` | Create a session checkpoint |
+| `/project:update` | `/project:up` | Update commands to latest release |
 
 ## How It Works
 
@@ -116,6 +131,9 @@ markdownlint --config .markdownlint.json *.md .claude/commands/*.md
 
 # Run tests
 ./tests/test_commands.sh
+
+# Test update functionality
+./tests/test_update.sh
 ```
 
 ### Command Development Guidelines
@@ -142,8 +160,40 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - **Documentation**: [Claude Code Docs](https://docs.anthropic.com/en/docs/claude-code/slash-commands)
 - **Community**: Share your custom commands!
 
+## Updating Commands
+
+### Automatic Updates
+
+Keep your commands current with the latest features:
+
+```bash
+# Update via slash command (recommended)
+/project:update
+
+# Update via install script
+curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash -s -- --update
+```
+
+### Release Process
+
+New releases are automatically created when tags are pushed:
+
+```bash
+# Create and push a new release tag
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+This triggers GitHub Actions to:
+- Create a GitHub release with changelog
+- Package command files as downloadable assets
+- Make the release available for updates
+
 ## Roadmap
 
+- [x] Session checkpoint and restoration
+- [x] Automatic update system
+- [x] GitHub releases integration
 - [ ] Restore command to load checkpoints
 - [ ] Project templates and scaffolding
 - [ ] Git workflow helpers
