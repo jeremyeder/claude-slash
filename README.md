@@ -28,17 +28,7 @@ cp -r claude-slash/.claude/commands .claude/
 rm -rf claude-slash
 ```
 
-### Option 3: Git Subtree (Tracks Updates)
-```bash
-git subtree add --prefix=.claude/commands https://github.com/jeremyeder/claude-slash.git main --squash
-```
-
-To update later:
-```bash
-git subtree pull --prefix=.claude/commands https://github.com/jeremyeder/claude-slash.git main --squash
-```
-
-### Option 4: Global Personal Installation
+### Option 3: Global Personal Installation
 ```bash
 # For personal use across all projects
 mkdir -p ~/.claude/commands
