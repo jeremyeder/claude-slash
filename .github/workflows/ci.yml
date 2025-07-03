@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Validate command files exist
+      run: |
+        echo "Checking for required command files..."
+        test -f .claude/commands/checkpoint.md || (echo "Missing checkpoint.md" && exit 1)
+        test -f .claude/commands/ckpt.md || (echo "Missing ckpt.md" && exit 1)
+        echo "✅ All command files present"
+    
+    - name: Validate markdown structure
+      run: |
+        echo "Validating markdown structure..."
+        for file in .claude/commands/*.md; do
+          echo "Checking $file..."
+          # Check for required sections
+          grep -q "^# " "$file" || (echo "Missing title in $file" && exit 1)
+          grep -q "## Usage" "$file" || (echo "Missing Usage section in $file" && exit 1)
+          grep -q "## Implementation" "$file" || (echo "Missing Implementation section in $file" && exit 1)
+          echo "✅ $file structure valid"
+        done
+    
+    - name: Validate shell syntax
+      run: |
+        echo "Validating shell syntax..."
+        for file in .claude/commands/*.md; do
+          echo "Checking shell commands in $file..."
+          # Extract shell commands (lines starting with !)
+          grep "^!" "$file" | sed 's/^!//' > /tmp/shell_commands.sh || true
+          if [ -s /tmp/shell_commands.sh ]; then
+            # Basic syntax check
+            bash -n /tmp/shell_commands.sh || (echo "Invalid shell syntax in $file" && exit 1)
+            echo "✅ Shell syntax valid in $file"
+          fi
+        done
+    
+    - name: Security check
+      run: |
+        echo "Running security checks..."
+        for file in .claude/commands/*.md; do
+          echo "Checking $file for security issues..."
+          # Check for dangerous patterns
+          if grep -q "rm -rf /" "$file"; then
+            echo "❌ Dangerous rm command found in $file"
+            exit 1
+          fi
+          if grep -q "sudo " "$file"; then
+            echo "❌ Sudo command found in $file"
+            exit 1
+          fi
+          if grep -q "curl.*|.*sh" "$file"; then
+            echo "❌ Dangerous curl pipe to shell found in $file"
+            exit 1
+          fi
+          echo "✅ $file security check passed"
+        done
+    
+    - name: Test install script
+      run: |
+        echo "Testing install script..."
+        test -f install.sh || (echo "Missing install.sh" && exit 1)
+        test -x install.sh || (echo "install.sh not executable" && exit 1)
+        bash -n install.sh || (echo "Invalid shell syntax in install.sh" && exit 1)
+        echo "✅ Install script validation passed"
+    
+    - name: Run tests
+      run: |
+        if [ -d tests ]; then
+          echo "Running test suite..."
+          for test_file in tests/*.sh; do
+            if [ -f "$test_file" ]; then
+              echo "Running $test_file..."
+              bash "$test_file"
+            fi
+          done
+        else
+          echo "No test directory found, skipping tests"
+        fi
