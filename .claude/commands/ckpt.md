@@ -3,7 +3,8 @@
 Shorthand alias for the checkpoint command.
 
 ## Usage
-```
+
+```bash
 /project:ckpt [description]
 ```
 

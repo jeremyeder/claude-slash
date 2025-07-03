@@ -7,8 +7,57 @@ on:
     branches: [ main ]
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js for markdown linting
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Install linting tools
+      run: |
+        # Install markdownlint
+        npm install -g markdownlint-cli
+        
+        # Install shellcheck
+        sudo apt-get update
+        sudo apt-get install -y shellcheck
+    
+    - name: Lint markdown files
+      run: |
+        echo "Linting markdown files..."
+        markdownlint --config .markdownlint.json *.md .claude/commands/*.md || true
+        echo "✅ Markdown linting complete"
+    
+    - name: Lint shell scripts with shellcheck
+      run: |
+        echo "Linting shell scripts with shellcheck..."
+        
+        # Lint install script
+        shellcheck install.sh
+        
+        # Lint test scripts
+        find tests -name "*.sh" -exec shellcheck {} \;
+        
+        # Extract and lint shell commands from markdown files
+        for file in .claude/commands/*.md; do
+          echo "Checking shell commands in $file..."
+          grep "^!" "$file" | sed 's/^!//' > /tmp/shell_commands.sh || true
+          if [ -s /tmp/shell_commands.sh ]; then
+            echo "Running shellcheck on commands from $file..."
+            shellcheck /tmp/shell_commands.sh || echo "Warning: shellcheck issues in $file"
+          fi
+        done
+        
+        echo "✅ Shell script linting complete"
+
   test:
     runs-on: ubuntu-latest
+    needs: lint
     
     steps:
     - uses: actions/checkout@v4

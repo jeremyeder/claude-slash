@@ -3,12 +3,15 @@
 Create a checkpoint of the current Claude Code session state for restoration in future sessions.
 
 ## Usage
-```
+
+```bash
 /project:checkpoint [description]
 ```
 
 ## Description
+
 This command captures the current session state including:
+
 - Git repository status and branch information
 - Current todo list state
 - Working directory context
@@ -64,12 +67,17 @@ CHECKPOINT_EOF
 !echo "4. Share the checkpoint file contents with Claude to restore context"
 
 ## Todo List Capture
-Since Claude Code doesn't provide direct access to todo list state via shell commands, include this instruction in your checkpoint restoration:
+
+Since Claude Code doesn't provide direct access to todo list state via shell commands,
+include this instruction in your checkpoint restoration:
 
 **Current Todo List State:**
-*When restoring this checkpoint, ask Claude to read the todo list from the checkpoint file if it was captured, or recreate the relevant todos based on the project state at checkpoint time.*
+*When restoring this checkpoint, ask Claude to read the todo list from the checkpoint
+file if it was captured, or recreate the relevant todos based on the project state
+at checkpoint time.*
 
 ## Notes
+
 - Checkpoints are stored within the git repository for project-specific context
 - Each checkpoint includes a timestamp for easy identification
 - Git information is captured even if not in a git repository

@@ -96,7 +96,27 @@ Claude Code slash commands are markdown files stored in `.claude/commands/` that
 2. Create a new command file in `.claude/commands/`
 3. Follow the existing command format
 4. Add documentation and examples
-5. Submit a pull request
+5. Run linting and tests locally
+6. Submit a pull request
+
+### Local Development
+
+```bash
+# Install pre-commit hooks (optional but recommended)
+pip install pre-commit
+pre-commit install
+
+# Run linting
+npm install -g markdownlint-cli
+markdownlint --config .markdownlint.json *.md .claude/commands/*.md
+
+# Install shellcheck (varies by OS)
+# macOS: brew install shellcheck
+# Ubuntu: sudo apt-get install shellcheck
+
+# Run tests
+./tests/test_commands.sh
+```
 
 ### Command Development Guidelines
 
