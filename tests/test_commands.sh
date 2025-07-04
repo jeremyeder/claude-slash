@@ -37,7 +37,7 @@ test_fail() {
 test_command_files_exist() {
     test_start "Command files exist"
     
-    if [ -f ".claude/commands/checkpoint.md" ] && [ -f ".claude/commands/ckpt.md" ] && [ -f ".claude/commands/restore.md" ] && [ -f ".claude/commands/rst.md" ]; then
+    if [ -f ".claude/commands/checkpoint.md" ] && [ -f ".claude/commands/ckpt.md" ] && [ -f ".claude/commands/restore.md" ] && [ -f ".claude/commands/rst.md" ] && [ -f ".claude/commands/cr-bootstrap.md" ] && [ -f ".claude/commands/bootstrap.md" ]; then
         test_pass "All command files found"
     else
         test_fail "Missing command files"
@@ -489,6 +489,84 @@ test_install_script() {
     fi
 }
 
+# Test bootstrap command functionality
+test_bootstrap_functionality() {
+    test_start "Bootstrap command functionality"
+    
+    # Test cr-bootstrap command structure
+    if [ -f ".claude/commands/cr-bootstrap.md" ]; then
+        if grep -q "Bootstrap claude-slash installation" ".claude/commands/cr-bootstrap.md"; then
+            test_pass "cr-bootstrap.md has proper description"
+        else
+            test_fail "cr-bootstrap.md missing proper description"
+        fi
+        
+        # Test argument parsing
+        if grep -q "for arg in \$ARGUMENTS" ".claude/commands/cr-bootstrap.md"; then
+            test_pass "cr-bootstrap.md has argument parsing"
+        else
+            test_fail "cr-bootstrap.md missing argument parsing"
+        fi
+        
+        # Test installation options
+        if grep -q -- "--global" ".claude/commands/cr-bootstrap.md" && grep -q -- "--force" ".claude/commands/cr-bootstrap.md"; then
+            test_pass "cr-bootstrap.md has installation options"
+        else
+            test_fail "cr-bootstrap.md missing installation options"
+        fi
+    else
+        test_fail "cr-bootstrap.md not found"
+    fi
+}
+
+# Test bootstrap command alias
+test_bootstrap_alias() {
+    test_start "Bootstrap command alias"
+    
+    if [ -f ".claude/commands/bootstrap.md" ]; then
+        if grep -q "This is an alias for the full" ".claude/commands/bootstrap.md"; then
+            test_pass "bootstrap.md has proper alias documentation"
+        else
+            test_fail "bootstrap.md missing alias documentation"
+        fi
+        
+        # Test that alias has same core functionality
+        if grep -q "install_global=false" ".claude/commands/bootstrap.md"; then
+            test_pass "bootstrap.md has same core logic"
+        else
+            test_fail "bootstrap.md missing core logic"
+        fi
+    else
+        test_fail "bootstrap.md not found"
+    fi
+}
+
+# Test bootstrap command validation
+test_bootstrap_validation() {
+    test_start "Bootstrap command validation"
+    
+    # Test directory creation logic
+    if grep -q "mkdir -p.*checkpoints" ".claude/commands/cr-bootstrap.md"; then
+        test_pass "cr-bootstrap creates checkpoints directory"
+    else
+        test_fail "cr-bootstrap missing checkpoints directory creation"
+    fi
+    
+    # Test GitHub API usage
+    if grep -q "api.github.com/repos" ".claude/commands/cr-bootstrap.md"; then
+        test_pass "cr-bootstrap uses GitHub API"
+    else
+        test_fail "cr-bootstrap missing GitHub API usage"
+    fi
+    
+    # Test validation step
+    if grep -q "Validating installation" ".claude/commands/cr-bootstrap.md"; then
+        test_pass "cr-bootstrap includes validation step"
+    else
+        test_fail "cr-bootstrap missing validation step"
+    fi
+}
+
 # Main test runner
 main() {
     echo "🧪 claude-slash test suite"
@@ -508,6 +586,9 @@ main() {
     test_restore_path_resolution
     test_restore_json_extraction
     test_restore_alias
+    test_bootstrap_functionality
+    test_bootstrap_alias
+    test_bootstrap_validation
     test_install_script
     
     # Summary

@@ -36,7 +36,8 @@ The update process is safe and includes automatic rollback if anything goes wron
 !    install_type="global"
 !else
 !    echo "❌ No claude-slash installation found"
-!    echo "Run the installer first: curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash"
+!    echo "Run the installer first:"
+!    echo "curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash"
 !    exit 1
 !fi
 
@@ -68,7 +69,8 @@ The update process is safe and includes automatic rollback if anything goes wron
 !temp_dir=$(mktemp -d)
 !echo "⬇️  Downloading latest release..."
 
-!if ! curl -sL "https://api.github.com/repos/jeremyeder/claude-slash/tarball/$latest_tag" | tar -xz -C "$temp_dir" --strip-components=1; then
+!download_url="https://api.github.com/repos/jeremyeder/claude-slash/tarball/$latest_tag"
+!if ! curl -sL "$download_url" | tar -xz -C "$temp_dir" --strip-components=1; then
 !    echo "❌ Failed to download release"
 !    echo "🔄 Restoring from backup..."
 !    rm -rf "$install_dir"
@@ -80,18 +82,18 @@ The update process is safe and includes automatic rollback if anything goes wron
 !# Update commands
 !if [ -d "$temp_dir/.claude/commands" ]; then
 !    echo "🔄 Updating commands..."
-!    
+!
 !    # Remove old commands
 !    find "$install_dir" -name "*.md" -delete
-!    
+!
 !    # Copy new commands
 !    cp "$temp_dir/.claude/commands/"*.md "$install_dir/"
-!    
+!
 !    echo "✅ Update completed successfully!"
 !    echo "📦 Updated to: $latest_tag"
 !    echo "📁 Backup saved to: $backup_dir"
 !    echo "🗑️  Remove backup with: rm -rf $backup_dir"
-!    
+!
 !else
 !    echo "❌ Downloaded release doesn't contain command files"
 !    echo "🔄 Restoring from backup..."

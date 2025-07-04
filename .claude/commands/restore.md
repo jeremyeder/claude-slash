@@ -10,9 +10,11 @@ Restore a Claude Code session from a checkpoint file.
 
 ## Description
 
-This command restores a Claude Code session from a previously created checkpoint. If no checkpoint file is specified, it will use the most recent checkpoint from the current repository.
+This command restores a Claude Code session from a previously created checkpoint.
+If no checkpoint file is specified, it will use the most recent checkpoint from the current repository.
 
 The restore process:
+
 - Validates the checkpoint file format
 - Switches to the recorded git branch (if different)
 - Navigates to the recorded working directory
