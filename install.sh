@@ -16,6 +16,7 @@ NC='\033[0m' # No Color
 REPO_URL="https://raw.githubusercontent.com/jeremyeder/claude-slash/main"
 API_URL="https://api.github.com/repos/jeremyeder/claude-slash"
 COMMANDS=("checkpoint.md" "ckpt.md" "update.md" "up.md")
+INSTALLER_VERSION="1.1.0"
 
 # Print colored output
 print_status() {
@@ -181,10 +182,31 @@ install_user() {
     echo "  • /user:up - Shorthand alias for update"
 }
 
+# Show version information
+show_version() {
+    echo "claude-slash installer v$INSTALLER_VERSION"
+    
+    # Get latest release version from GitHub
+    print_status "Checking latest release version..."
+    local latest_info
+    latest_info=$(curl -s "$API_URL/releases/latest" 2>/dev/null)
+    if [ $? -eq 0 ] && [ -n "$latest_info" ]; then
+        local latest_tag
+        latest_tag=$(echo "$latest_info" | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+        if [ -n "$latest_tag" ]; then
+            echo "Latest release: $latest_tag"
+        else
+            echo "Latest release: Unable to determine"
+        fi
+    else
+        echo "Latest release: Unable to check (network error)"
+    fi
+}
+
 # Main installation logic
 main() {
-    echo "🚀 claude-slash installer"
-    echo "=========================="
+    echo "🚀 claude-slash installer v$INSTALLER_VERSION"
+    echo "============================================="
     echo
     
     # Check for required tools
@@ -233,6 +255,7 @@ case "${1:-}" in
         echo "Usage: $0 [OPTIONS]"
         echo
         echo "Options:"
+        echo "  --version   Show version information"
         echo "  --update    Update existing installation to latest release"
         echo "  --global    Install to personal directory (~/.claude/commands/)"
         echo "  --help      Show this help message"
@@ -241,6 +264,11 @@ case "${1:-}" in
         echo "  $0                    # Install to current project"
         echo "  $0 --global          # Install for personal use"
         echo "  $0 --update          # Update existing installation"
+        echo "  $0 --version         # Show version information"
+        exit 0
+        ;;
+    --version|-v)
+        show_version
         exit 0
         ;;
     --update)

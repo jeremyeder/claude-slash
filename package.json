@@ -1,0 +1,41 @@
+{
+  "name": "claude-slash",
+  "version": "1.1.0",
+  "description": "Custom slash commands for Claude Code CLI",
+  "scripts": {
+    "version": "echo $npm_package_version",
+    "bump:patch": "./scripts/bump-version.sh patch",
+    "bump:minor": "./scripts/bump-version.sh minor", 
+    "bump:major": "./scripts/bump-version.sh major",
+    "release:patch": "./scripts/release.sh patch",
+    "release:minor": "./scripts/release.sh minor",
+    "release:major": "./scripts/release.sh major",
+    "test": "find tests -name '*.sh' -exec bash {} \\;",
+    "lint": "markdownlint --config .markdownlint.json *.md .claude/commands/*.md && shellcheck install.sh scripts/*.sh",
+    "validate": "npm run lint && npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jeremyeder/claude-slash.git"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "cli",
+    "slash-commands",
+    "checkpoint",
+    "session-management"
+  ],
+  "author": "Jeremy Eder",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jeremyeder/claude-slash/issues"
+  },
+  "homepage": "https://github.com/jeremyeder/claude-slash#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "markdownlint-cli": "^0.39.0"
+  }
+}

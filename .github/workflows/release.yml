@@ -31,6 +31,30 @@ jobs:
         echo "Release tag: $TAG_NAME"
         echo "Version: $VERSION"
     
+    - name: Update VERSION file for consistency
+      run: |
+        echo "Ensuring VERSION file matches tag..."
+        echo "${{ steps.release_info.outputs.version }}" > VERSION
+        
+        # Also update install.sh version
+        sed -i "s/INSTALLER_VERSION=\"[^\"]*\"/INSTALLER_VERSION=\"${{ steps.release_info.outputs.version }}\"/" install.sh
+        
+        # Check if files were actually changed
+        if git diff --quiet; then
+          echo "No changes needed - files already in sync"
+        else
+          echo "Updated VERSION and install.sh to match tag"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add VERSION install.sh
+          git commit -m "Sync VERSION file with release tag ${{ steps.release_info.outputs.tag_name }}
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+          git push origin HEAD:main
+        fi
+    
     - name: Generate release notes
       id: release_notes
       run: |
