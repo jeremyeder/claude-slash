@@ -141,7 +141,7 @@ run_linting() {
     # Check markdown files if markdownlint is available
     if command -v markdownlint &> /dev/null; then
         print_status "Linting markdown files..."
-        if ! markdownlint --config .markdownlint.json *.md .claude/commands/*.md 2>/dev/null; then
+        if ! markdownlint --config .markdownlint.json ./*.md .claude/commands/*.md 2>/dev/null; then
             print_warning "Markdown linting issues found"
         fi
     fi

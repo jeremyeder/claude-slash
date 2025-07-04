@@ -95,8 +95,7 @@ update_installation() {
     # Check for latest release
     print_status "🔍 Checking latest release..."
     local latest_info
-    latest_info=$(curl -s "$API_URL/releases/latest")
-    if [ $? -ne 0 ]; then
+    if ! latest_info=$(curl -s "$API_URL/releases/latest"); then
         print_error "Failed to check for updates (network error)"
         exit 1
     fi
@@ -112,7 +111,8 @@ update_installation() {
     print_status "📦 Latest release: $latest_tag"
     
     # Create backup
-    local backup_dir="$install_dir.backup.$(date +%Y%m%d-%H%M%S)"
+    local backup_dir
+    backup_dir="$install_dir.backup.$(date +%Y%m%d-%H%M%S)"
     print_status "💾 Creating backup at: $backup_dir"
     cp -r "$install_dir" "$backup_dir"
     
@@ -189,8 +189,7 @@ show_version() {
     # Get latest release version from GitHub
     print_status "Checking latest release version..."
     local latest_info
-    latest_info=$(curl -s "$API_URL/releases/latest" 2>/dev/null)
-    if [ $? -eq 0 ] && [ -n "$latest_info" ]; then
+    if latest_info=$(curl -s "$API_URL/releases/latest" 2>/dev/null) && [ -n "$latest_info" ]; then
         local latest_tag
         latest_tag=$(echo "$latest_info" | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
         if [ -n "$latest_tag" ]; then
