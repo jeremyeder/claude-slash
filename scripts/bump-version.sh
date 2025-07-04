@@ -41,6 +41,7 @@ show_usage() {
     echo "Options:"
     echo "  --dry-run    Show what would be done without making changes"
     echo "  --push       Push the new tag to origin after creation"
+    echo "  --yes        Skip confirmation prompts (non-interactive)"
     echo "  --help       Show this help message"
     echo
     echo "Examples:"
@@ -130,6 +131,7 @@ main() {
     local bump_type=""
     local dry_run=false
     local push_tag=false
+    local auto_yes=false
     
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -148,6 +150,10 @@ main() {
                 ;;
             --push)
                 push_tag=true
+                shift
+                ;;
+            --yes|-y)
+                auto_yes=true
                 shift
                 ;;
             --help|-h)
@@ -178,11 +184,15 @@ main() {
     # Check for uncommitted changes
     if ! git diff-index --quiet HEAD --; then
         print_warning "You have uncommitted changes"
-        read -p "Continue anyway? (y/N): " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            print_status "Aborted"
-            exit 0
+        if [ "$auto_yes" != true ]; then
+            read -p "Continue anyway? (y/N): " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                print_status "Aborted"
+                exit 0
+            fi
+        else
+            print_status "Auto-confirmed: Continuing with uncommitted changes"
         fi
     fi
     
@@ -217,11 +227,16 @@ main() {
         echo "  • Push tag to origin (triggering release)"
     fi
     echo
-    read -p "Continue? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_status "Aborted"
-        exit 0
+    
+    if [ "$auto_yes" != true ]; then
+        read -p "Continue? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            print_status "Aborted"
+            exit 0
+        fi
+    else
+        print_status "Auto-confirmed: Proceeding with version bump"
     fi
     
     # Make the changes

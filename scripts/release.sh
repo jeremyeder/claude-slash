@@ -41,6 +41,7 @@ show_usage() {
     echo "Options:"
     echo "  --skip-tests    Skip running tests before release"
     echo "  --dry-run       Show what would be done without making changes"
+    echo "  --yes           Skip confirmation prompts (non-interactive)"
     echo "  --help          Show this help message"
     echo
     echo "Examples:"
@@ -195,6 +196,7 @@ main() {
     local release_type=""
     local skip_tests=false
     local dry_run=false
+    local auto_yes=false
     
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -213,6 +215,10 @@ main() {
                 ;;
             --dry-run)
                 dry_run=true
+                shift
+                ;;
+            --yes|-y)
+                auto_yes=true
                 shift
                 ;;
             --help|-h)
@@ -287,11 +293,16 @@ main() {
     echo "  • Create and push git tag"
     echo "  • Trigger GitHub Actions release"
     echo
-    read -p "Continue with $release_type release? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_status "Release cancelled"
-        exit 0
+    
+    if [ "$auto_yes" != true ]; then
+        read -p "Continue with $release_type release? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            print_status "Release cancelled"
+            exit 0
+        fi
+    else
+        print_status "Auto-confirmed: Proceeding with $release_type release"
     fi
     
     # Execute release steps
@@ -317,7 +328,11 @@ main() {
     
     echo
     print_status "🔖 Step 5: Bumping version and creating tag..."
-    if ! ./scripts/bump-version.sh "$release_type" --push; then
+    local bump_args=("$release_type" "--push")
+    if [ "$auto_yes" = true ]; then
+        bump_args+=("--yes")
+    fi
+    if ! ./scripts/bump-version.sh "${bump_args[@]}"; then
         print_error "Version bump failed"
         exit 1
     fi
