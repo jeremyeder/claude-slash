@@ -50,17 +50,17 @@ test_update_command_structure() {
         test_fail "update.md command file not found"
     fi
     
-    if [ -f ".claude/commands/up.md" ]; then
+    if [ -f ".claude/commands/cr-upgrade.md" ]; then
         # Check for required sections
-        if grep -q "^# Update" ".claude/commands/up.md" && \
-           grep -q "## Usage" ".claude/commands/up.md" && \
-           grep -q "## Implementation" ".claude/commands/up.md"; then
-            test_pass "up.md has proper structure"
+        if grep -q "^# CR Upgrade" ".claude/commands/cr-upgrade.md" && \
+           grep -q "## Usage" ".claude/commands/cr-upgrade.md" && \
+           grep -q "## Implementation" ".claude/commands/cr-upgrade.md"; then
+            test_pass "cr-upgrade.md has proper structure"
         else
-            test_fail "up.md missing required sections"
+            test_fail "cr-upgrade.md missing required sections"
         fi
     else
-        test_fail "up.md command file not found"
+        test_fail "cr-upgrade.md command file not found"
     fi
 }
 

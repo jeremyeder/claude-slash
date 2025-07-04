@@ -1,11 +1,11 @@
-# Update Shorthand (up)
+# CR Upgrade (cr-upgrade)
 
 Shorthand alias for the update command - updates claude-slash commands to the latest release.
 
 ## Usage
 
 ```bash
-/project:up
+/project:cr-upgrade
 ```
 
 ## Description
@@ -107,4 +107,4 @@ This is a convenient shorthand for `/project:update`. It performs the same updat
 
 - This is an alias for the full `/project:update` command
 - All functionality is identical to the main update command
-- Use whichever version you prefer: `/project:up` or `/project:update`
+- Use whichever version you prefer: `/project:cr-upgrade` or `/project:update`
