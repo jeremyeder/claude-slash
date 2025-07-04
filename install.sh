@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 # GitHub repository details
 REPO_URL="https://raw.githubusercontent.com/jeremyeder/claude-slash/main"
 API_URL="https://api.github.com/repos/jeremyeder/claude-slash"
-COMMANDS=("checkpoint.md" "ckpt.md" "update.md" "up.md")
+COMMANDS=("checkpoint.md" "ckpt.md" "restore.md" "rst.md" "update.md" "up.md")
 INSTALLER_VERSION="1.2.0"
 
 # Print colored output
@@ -66,6 +66,8 @@ install_project() {
     print_status "Available commands:"
     echo "  • /project:checkpoint [description] - Create a session checkpoint"
     echo "  • /project:ckpt [description] - Shorthand alias"
+    echo "  • /project:restore [checkpoint] - Restore from a checkpoint"
+    echo "  • /project:rst [checkpoint] - Shorthand alias"
     echo "  • /project:update - Update commands to latest release"
     echo "  • /project:up - Shorthand alias for update"
 }
@@ -178,6 +180,8 @@ install_user() {
     print_status "Available commands:"
     echo "  • /user:checkpoint [description] - Create a session checkpoint"
     echo "  • /user:ckpt [description] - Shorthand alias"
+    echo "  • /user:restore [checkpoint] - Restore from a checkpoint"
+    echo "  • /user:rst [checkpoint] - Shorthand alias"
     echo "  • /user:update - Update commands to latest release"
     echo "  • /user:up - Shorthand alias for update"
 }
