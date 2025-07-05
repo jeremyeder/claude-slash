@@ -1,6 +1,6 @@
 {
   "name": "claude-slash",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Custom slash commands for Claude Code CLI",
   "scripts": {
     "version": "echo $npm_package_version",

@@ -135,6 +135,19 @@ This command provides an interactive bootstrap process for setting up claude-sla
 !# Cleanup
 !rm -rf "$temp_dir"
 
+!# Check for GitHub Actions integration (if in git repo)
+!if git rev-parse --git-dir > /dev/null 2>&1; then
+!    echo
+!    echo "🔍 Checking GitHub Actions integration..."
+!    if [ ! -f ".github/workflows/ci.yml" ] && [ ! -f ".github/workflows/main.yml" ] && [ ! -d ".github/workflows" ]; then
+!        echo "⚠️  Warning: This appears to be a GitHub repository without GitHub Actions integration."
+!        echo "   Consider setting up GitHub Actions for automated testing and deployment."
+!        echo "   See: <https://docs.github.com/en/actions/quickstart>"
+!    else
+!        echo "✅ GitHub Actions integration detected"
+!    fi
+!fi
+
 !# Validate installation
 !echo
 !echo "🔍 Validating installation..."
