@@ -89,8 +89,10 @@ integration points while maintaining full user control over the process.
 !echo ""
 
 !# Format learning content
-!formatted_learning=$(printf "## Session Learning - %s\n\n**Context**: %s\n\n**Learning**: %s\n\n**Application**: This insight should be applied to future similar scenarios to improve efficiency and outcomes.\n" \
+!formatted_learning=$(printf "## Session Learning - %s\n\n**Context**: %s\n\n**Learning**: %s\n\n" \
 !  "$timestamp" "$(basename "$git_root" 2>/dev/null || echo "Current session")" "$learning_content")
+!formatted_learning="${formatted_learning}**Application**: This insight should be applied to future similar scenarios to"
+!formatted_learning="${formatted_learning} improve efficiency and outcomes.\n"
 
 !echo -e "${YELLOW}📋 Learning content to be integrated:${NC}"
 !echo -e "${YELLOW}================================${NC}"
@@ -243,7 +245,7 @@ integration points while maintaining full user control over the process.
 !  if [ "$integration_type" = "append" ]; then
 !    # Find the end of the target section
 !    next_section_line=$(grep -n "^#" "$claude_md_path" | awk -F: -v target="$target_line" '$1 > target {print $1; exit}')
-!    
+!
 !    if [ -n "$next_section_line" ]; then
 !      # Insert before next section
 !      sed -n "1,$((next_section_line - 1))p" "$claude_md_path" > "$temp_file"
