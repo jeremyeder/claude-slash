@@ -37,7 +37,7 @@ test_fail() {
 test_command_files_exist() {
     test_start "Command files exist"
     
-    if [ -f ".claude/commands/checkpoint.md" ] && [ -f ".claude/commands/ckpt.md" ] && [ -f ".claude/commands/restore.md" ] && [ -f ".claude/commands/rst.md" ] && [ -f ".claude/commands/cr-bootstrap.md" ] && [ -f ".claude/commands/bootstrap.md" ]; then
+    if [ -f ".claude/commands/checkpoint.md" ] && [ -f ".claude/commands/ckpt.md" ] && [ -f ".claude/commands/restore.md" ] && [ -f ".claude/commands/rst.md" ] && [ -f ".claude/commands/cr-bootstrap.md" ] && [ -f ".claude/commands/bootstrap.md" ] && [ -f ".claude/commands/menuconfig.md" ] && [ -f ".claude/commands/mcfg.md" ]; then
         test_pass "All command files found"
     else
         test_fail "Missing command files"
@@ -567,6 +567,74 @@ test_bootstrap_validation() {
     fi
 }
 
+# Test menuconfig functionality
+test_menuconfig_functionality() {
+    test_start "Menuconfig command functionality"
+    
+    if [ -f ".claude/commands/menuconfig.md" ]; then
+        # Check for menuconfig-specific content
+        if grep -q "menuconfig-style" ".claude/commands/menuconfig.md" && \
+           grep -q "textual" ".claude/commands/menuconfig.md" && \
+           grep -q "claude_menuconfig.py" ".claude/commands/menuconfig.md"; then
+            test_pass "Menuconfig command has proper content"
+        else
+            test_fail "Menuconfig command missing key functionality"
+        fi
+        
+        # Check if Python script path is referenced correctly
+        if grep -q 'claude_menuconfig.py' ".claude/commands/menuconfig.md" && \
+           grep -q 'scripts_dir.*claude_menuconfig.py' ".claude/commands/menuconfig.md"; then
+            test_pass "Menuconfig references correct Python script path"
+        else
+            test_fail "Menuconfig missing Python script reference"
+        fi
+        
+        # Check if the Python script exists
+        if [ -f ".claude/scripts/claude_menuconfig.py" ]; then
+            test_pass "Menuconfig Python script exists"
+            
+            # Test Python syntax if python3 is available
+            if command -v python3 &> /dev/null; then
+                if python3 -m py_compile .claude/scripts/claude_menuconfig.py 2>/dev/null; then
+                    test_pass "Menuconfig Python script syntax is valid"
+                else
+                    test_fail "Menuconfig Python script has syntax errors"
+                fi
+            else
+                test_pass "Python syntax check skipped (Python not available)"
+            fi
+        else
+            test_fail "Menuconfig Python script missing"
+        fi
+    else
+        test_fail "Menuconfig command file not found"
+    fi
+}
+
+# Test menuconfig alias
+test_menuconfig_alias() {
+    test_start "Menuconfig alias functionality"
+    
+    if [ -f ".claude/commands/mcfg.md" ] && [ -f ".claude/commands/menuconfig.md" ]; then
+        # Check that both files reference the same Python script
+        if grep -q "claude_menuconfig.py" ".claude/commands/mcfg.md" && \
+           grep -q "claude_menuconfig.py" ".claude/commands/menuconfig.md"; then
+            test_pass "Menuconfig alias references same script"
+        else
+            test_fail "Menuconfig alias missing script reference"
+        fi
+        
+        # Check that alias has proper description
+        if grep -q "Short alias" ".claude/commands/mcfg.md"; then
+            test_pass "Menuconfig alias has proper description"
+        else
+            test_fail "Menuconfig alias missing alias description"
+        fi
+    else
+        test_fail "Cannot compare menuconfig alias files"
+    fi
+}
+
 # Main test runner
 main() {
     echo "🧪 claude-slash test suite"
@@ -590,6 +658,8 @@ main() {
     test_bootstrap_alias
     test_bootstrap_validation
     test_install_script
+    test_menuconfig_functionality
+    test_menuconfig_alias
     
     # Summary
     echo
