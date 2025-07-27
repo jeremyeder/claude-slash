@@ -39,6 +39,18 @@ class Section:
     children: List['Section'] = field(default_factory=list)
     parent: Optional['Section'] = None
     content_lines: List[str] = field(default_factory=list)
+    
+    def __hash__(self):
+        """Make Section hashable by using immutable attributes"""
+        return hash((self.level, self.title, self.line_start))
+        
+    def __eq__(self, other):
+        """Define equality for sections"""
+        if not isinstance(other, Section):
+            return False
+        return (self.level == other.level and 
+                self.title == other.title and 
+                self.line_start == other.line_start)
 
     @property
     def full_title(self) -> str:
@@ -389,7 +401,14 @@ class MenuconfigApp(App):
         
     def compose(self) -> ComposeResult:
         yield Header()
-        yield Static("CLAUDE.md Menuconfig - Loading...", id="main-content")
+        yield Container(
+            Static("CLAUDE.md Menuconfig - Loading...", id="loading-message"),
+            id="main-container"
+        )
+        yield Container(
+            Static(self._get_status_text(), id="status-text"),
+            id="status-bar"
+        )
         yield Footer()
         
     async def on_mount(self) -> None:
@@ -401,23 +420,50 @@ class MenuconfigApp(App):
                 
             # Parse sections
             self.sections = self.parser.parse()
+            print(f"Debug: Found {len(self.sections)} sections")
             
-            # Update the static content with parsed info
-            main_content = self.query_one("#main-content", Static)
-            main_content.update(f"CLAUDE.md loaded with {len(self.sections)} sections. Press 'q' to quit.")
+            # Replace loading message with tree
+            main_container = self.query_one("#main-container")
+            main_container.remove_children()
+            
+            if self.sections:
+                print(f"Debug: Creating tree with sections: {[s.title for s in self.sections]}")
+                try:
+                    tree = MenuconfigTree(self.sections, id="config-tree")
+                    print("Debug: Tree created successfully")
+                    tree_container = Container(tree, id="tree-container")
+                    print("Debug: Tree container created")
+                    main_container.mount(tree_container)
+                    print("Debug: Tree mounted successfully")
+                except Exception as tree_error:
+                    print(f"Debug: Error creating tree: {tree_error}")
+                    import traceback
+                    traceback.print_exc()
+                    main_container.mount(Static(f"Error creating tree: {tree_error}", id="tree-error"))
+            else:
+                print("Debug: No sections found")
+                main_container.mount(Static("No sections found in CLAUDE.md file", id="no-sections"))
+                
+            self._update_status()
             
         except Exception as e:
+            print(f"Debug: Error in on_mount: {e}")
             self.exit(f"Error loading {self.file_path}: {e}")
             
     def _get_status_text(self) -> str:
         """Get status bar text"""
         modified_text = " [MODIFIED]" if self.modified else ""
-        return f"File: {self.file_path}{modified_text} | Use arrow keys to navigate, Space to toggle, 's' to save, '?' for help"
+        sections_text = f" | {len(self.sections)} sections loaded" if hasattr(self, 'sections') else ""
+        return f"File: {self.file_path}{modified_text}{sections_text} | Use arrow keys to navigate, Space to toggle, 's' to save, '?' for help"
         
     def _update_status(self) -> None:
         """Update status bar"""
-        status = self.query_one("#status-text", Static)
-        status.update(self._get_status_text())
+        try:
+            status = self.query_one("#status-text", Static)
+            status.update(self._get_status_text())
+        except Exception:
+            # Status bar might not exist yet during startup
+            pass
         
     def action_toggle(self) -> None:
         """Toggle current section"""
@@ -514,13 +560,21 @@ def main():
         sys.exit(1)
         
     file_path = sys.argv[1]
+    print(f"Debug: Starting with file: {file_path}")
     
     if not os.path.exists(file_path):
         print(f"Error: File not found: {file_path}")
         sys.exit(1)
         
-    app = MenuconfigApp(file_path)
-    app.run()
+    print("Debug: Creating app...")
+    try:
+        app = MenuconfigApp(file_path)
+        print("Debug: Running app...")
+        app.run()
+    except Exception as e:
+        print(f"Debug: Exception in main: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 if __name__ == "__main__":
