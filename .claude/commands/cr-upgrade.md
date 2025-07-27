@@ -69,7 +69,8 @@ This is a convenient shorthand for `/project:update`. It performs the same updat
 
 !download_url="https://api.github.com/repos/jeremyeder/claude-slash/tarball/$latest_tag"
 !tarball_file="$temp_dir/claude-slash.tar.gz"
-!if ! curl -sL "$download_url" -o "$tarball_file" || ! tar -xz -C "$temp_dir" --strip-components=1 -f "$tarball_file"; then
+!curl -sL "$download_url" -o "$tarball_file"
+!if [ $? -ne 0 ] || ! tar -xz -C "$temp_dir" --strip-components=1 -f "$tarball_file"; then
 !    echo "❌ Failed to download release"
 !    echo "🔄 Restoring from backup..."
 !    rm -rf "$install_dir"
