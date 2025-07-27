@@ -3,14 +3,19 @@
 Interactive menuconfig-style editor for CLAUDE.md files with Linux kernel menuconfig look and feel.
 
 ## Usage
-```
+
+```bash
 /project:mcfg [file]
 ```
 
 ## Description
-Short alias for `/project:menuconfig`. Provides a text-based user interface similar to Linux kernel menuconfig for managing CLAUDE.md file sections. Navigate with arrow keys, toggle sections with space, search with '/', and save with 'S'.
+
+Short alias for `/project:menuconfig`. Provides a text-based user interface similar to Linux kernel
+menuconfig for managing CLAUDE.md file sections. Navigate with arrow keys, toggle sections with space,
+search with '/', and save with 'S'.
 
 Features:
+
 - TreeView navigation of CLAUDE.md sections
 - Enable/disable sections with visual indicators
 - Linux kernel menuconfig-style interface
@@ -69,13 +74,13 @@ Features:
 !        echo "Creating Python virtual environment for menuconfig with uv..."
 !        uv venv "$venv_dir"
 !    fi
-!    
+!
 !    # Check if textual is installed
 !    if ! "$venv_dir/bin/python" -c "import textual" 2>/dev/null; then
 !        echo "Installing textual using uv..."
 !        uv pip install --python "$venv_dir/bin/python" textual
 !    fi
-!    
+!
 !    python_exe="$venv_dir/bin/python"
 !else
 !    # Fallback to traditional pip
@@ -83,14 +88,14 @@ Features:
 !        echo "Creating Python virtual environment for menuconfig..."
 !        python3 -m venv "$venv_dir"
 !    fi
-!    
+!
 !    source "$venv_dir/bin/activate"
-!    
+!
 !    if ! python -c "import textual" 2>/dev/null; then
 !        echo "Installing textual using pip..."
 !        pip install textual
 !    fi
-!    
+!
 !    python_exe="python"
 !fi
 !
