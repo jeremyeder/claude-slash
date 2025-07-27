@@ -420,34 +420,21 @@ class MenuconfigApp(App):
                 
             # Parse sections
             self.sections = self.parser.parse()
-            print(f"Debug: Found {len(self.sections)} sections")
             
             # Replace loading message with tree
             main_container = self.query_one("#main-container")
             main_container.remove_children()
             
             if self.sections:
-                print(f"Debug: Creating tree with sections: {[s.title for s in self.sections]}")
-                try:
-                    tree = MenuconfigTree(self.sections, id="config-tree")
-                    print("Debug: Tree created successfully")
-                    tree_container = Container(tree, id="tree-container")
-                    print("Debug: Tree container created")
-                    main_container.mount(tree_container)
-                    print("Debug: Tree mounted successfully")
-                except Exception as tree_error:
-                    print(f"Debug: Error creating tree: {tree_error}")
-                    import traceback
-                    traceback.print_exc()
-                    main_container.mount(Static(f"Error creating tree: {tree_error}", id="tree-error"))
+                tree = MenuconfigTree(self.sections, id="config-tree")
+                tree_container = Container(tree, id="tree-container")
+                main_container.mount(tree_container)
             else:
-                print("Debug: No sections found")
                 main_container.mount(Static("No sections found in CLAUDE.md file", id="no-sections"))
                 
             self._update_status()
             
         except Exception as e:
-            print(f"Debug: Error in on_mount: {e}")
             self.exit(f"Error loading {self.file_path}: {e}")
             
     def _get_status_text(self) -> str:
@@ -502,7 +489,6 @@ class MenuconfigApp(App):
         
     def action_quit(self) -> None:
         """Quit application"""
-        print("Debug: quit action called")
         if self.modified:
             # TODO: Add confirmation dialog
             pass
@@ -560,21 +546,13 @@ def main():
         sys.exit(1)
         
     file_path = sys.argv[1]
-    print(f"Debug: Starting with file: {file_path}")
     
     if not os.path.exists(file_path):
         print(f"Error: File not found: {file_path}")
         sys.exit(1)
         
-    print("Debug: Creating app...")
-    try:
-        app = MenuconfigApp(file_path)
-        print("Debug: Running app...")
-        app.run()
-    except Exception as e:
-        print(f"Debug: Exception in main: {e}")
-        import traceback
-        traceback.print_exc()
+    app = MenuconfigApp(file_path)
+    app.run()
 
 
 if __name__ == "__main__":
