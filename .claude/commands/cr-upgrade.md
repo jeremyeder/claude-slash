@@ -35,7 +35,7 @@ This is a convenient shorthand for `/project:update`. It performs the same updat
 !else
 !    echo "❌ No claude-slash installation found"
 !    echo "Run the installer first:"
-!    echo "curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash"
+!    echo "curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh -o install.sh && bash install.sh"
 !    exit 1
 !fi
 
@@ -68,7 +68,8 @@ This is a convenient shorthand for `/project:update`. It performs the same updat
 !echo "⬇️  Downloading latest release..."
 
 !download_url="https://api.github.com/repos/jeremyeder/claude-slash/tarball/$latest_tag"
-!if ! curl -sL "$download_url" | tar -xz -C "$temp_dir" --strip-components=1; then
+!tarball_file="$temp_dir/claude-slash.tar.gz"
+!if ! curl -sL "$download_url" -o "$tarball_file" || ! tar -xz -C "$temp_dir" --strip-components=1 -f "$tarball_file"; then
 !    echo "❌ Failed to download release"
 !    echo "🔄 Restoring from backup..."
 !    rm -rf "$install_dir"
