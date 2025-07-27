@@ -30,7 +30,7 @@ jobs:
     - name: Lint markdown files
       run: |
         echo "Linting markdown files..."
-        markdownlint --config .markdownlint.json *.md .claude/commands/*.md || true
+        markdownlint --config .markdownlint.json *.md .claude/commands/*.md
         echo "✅ Markdown linting complete"
     
     - name: Lint shell scripts with shellcheck
