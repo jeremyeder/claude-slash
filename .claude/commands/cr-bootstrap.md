@@ -96,7 +96,7 @@ This command provides an interactive bootstrap process for setting up claude-sla
 !# Download latest release info
 !echo
 !echo "🔍 Checking latest release..."
-!if ! latest_info=$(curl -s "<https://api.github.com/repos/jeremyeder/claude-slash/releases/latest>"); then
+!if ! latest_info=$(curl -s "https://api.github.com/repos/jeremyeder/claude-slash/releases/latest"); then
 !    echo "❌ Failed to check latest release (network error)"
 !    exit 1
 !fi
@@ -114,7 +114,7 @@ This command provides an interactive bootstrap process for setting up claude-sla
 !echo "⬇️  Downloading commands..."
 !temp_dir=$(mktemp -d)
 
-!download_url="<https://api.github.com/repos/jeremyeder/claude-slash/tarball/$latest_tag>"
+!download_url="https://api.github.com/repos/jeremyeder/claude-slash/tarball/$latest_tag"
 !if ! curl -sL "$download_url" | tar -xz -C "$temp_dir" --strip-components=1; then
 !    echo "❌ Failed to download release"
 !    rm -rf "$temp_dir"
@@ -142,7 +142,7 @@ This command provides an interactive bootstrap process for setting up claude-sla
 !    if [ ! -f ".github/workflows/ci.yml" ] && [ ! -f ".github/workflows/main.yml" ] && [ ! -d ".github/workflows" ]; then
 !        echo "⚠️  Warning: This appears to be a GitHub repository without GitHub Actions integration."
 !        echo "   Consider setting up GitHub Actions for automated testing and deployment."
-!        echo "   See: <https://docs.github.com/en/actions/quickstart>"
+!        echo "   See: https://docs.github.com/en/actions/quickstart"
 !    else
 !        echo "✅ GitHub Actions integration detected"
 !    fi
