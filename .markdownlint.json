@@ -10,6 +10,7 @@
   "MD026": { "punctuation": ".,;:!?" },
   "MD029": { "style": "ordered" },
   "MD033": { "allowed_elements": ["br", "details", "summary"] },
+  "MD034": false,
   "MD041": false,
   "MD046": { "style": "fenced" }
 }
