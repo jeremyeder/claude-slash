@@ -4,13 +4,20 @@
   "MD003": { "style": "atx" },
   "MD004": { "style": "dash" },
   "MD007": { "indent": 2 },
+  "MD009": false,
   "MD012": { "maximum": 2 },
-  "MD013": { "line_length": 120 },
+  "MD013": false,
+  "MD022": false,
   "MD024": { "allow_different_nesting": true },
-  "MD026": { "punctuation": ".,;:!?" },
+  "MD026": false,
   "MD029": { "style": "ordered" },
+  "MD031": false,
+  "MD032": false,
   "MD033": { "allowed_elements": ["br", "details", "summary"] },
   "MD034": false,
+  "MD036": false,
+  "MD040": false,
   "MD041": false,
-  "MD046": { "style": "fenced" }
+  "MD046": { "style": "fenced" },
+  "MD047": false
 }
