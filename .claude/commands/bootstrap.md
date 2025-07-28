@@ -10,7 +10,8 @@ Bootstrap claude-slash installation with interactive setup and configuration.
 
 ## Description
 
-This is an alias for the full `/project:cr-bootstrap` command. It provides an interactive bootstrap process for setting up claude-slash commands with all the same functionality:
+This is an alias for the full `/project:cr-bootstrap` command. It provides an interactive bootstrap process for
+setting up claude-slash commands with the same functionality:
 
 - Detects the current environment (project vs global)
 - Downloads and installs the latest claude-slash commands
@@ -96,7 +97,7 @@ This is an alias for the full `/project:cr-bootstrap` command. It provides an in
 !# Download latest release info
 !echo
 !echo "🔍 Checking latest release..."
-!if ! latest_info=$(curl -s "https://api.github.com/repos/jeremyeder/claude-slash/releases/latest"); then
+!if ! latest_info=$(curl -s "<https://api.github.com/repos/jeremyeder/claude-slash/releases/latest>"); then
 !    echo "❌ Failed to check latest release (network error)"
 !    exit 1
 !fi
@@ -114,7 +115,7 @@ This is an alias for the full `/project:cr-bootstrap` command. It provides an in
 !echo "⬇️  Downloading commands..."
 !temp_dir=$(mktemp -d)
 
-!download_url="https://api.github.com/repos/jeremyeder/claude-slash/tarball/$latest_tag"
+!download_url="<https://api.github.com/repos/jeremyeder/claude-slash/tarball/$latest_tag>"
 !if ! curl -sL "$download_url" | tar -xz -C "$temp_dir" --strip-components=1; then
 !    echo "❌ Failed to download release"
 !    rm -rf "$temp_dir"
@@ -157,6 +158,30 @@ This is an alias for the full `/project:cr-bootstrap` command. It provides an in
 !if [ "$command_count" -eq 0 ]; then
 !    echo "❌ No commands found after installation"
 !    exit 1
+!fi
+
+!# Setup pre-commit hooks (if in git repo)
+!if git rev-parse --git-dir > /dev/null 2>&1; then
+!    echo
+!    echo "🪝 Setting up pre-commit hooks..."
+!
+!    # Check if pre-commit is installed
+!    if command -v pre-commit > /dev/null 2>&1; then
+!        # Check if .pre-commit-config.yaml exists
+!        if [ -f ".pre-commit-config.yaml" ]; then
+!            echo "📋 Installing pre-commit hooks..."
+!            if pre-commit install; then
+!                echo "✅ Pre-commit hooks installed successfully"
+!            else
+!                echo "⚠️  Warning: Failed to install pre-commit hooks"
+!            fi
+!        else
+!            echo "⚠️  No .pre-commit-config.yaml found - skipping pre-commit setup"
+!        fi
+!    else
+!        echo "⚠️  pre-commit not installed - skipping hook setup"
+!        echo "   Install with: pip install pre-commit (or brew install pre-commit)"
+!    fi
 !fi
 
 !# Show available commands
