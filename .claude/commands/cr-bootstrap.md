@@ -142,7 +142,7 @@ This command provides an interactive bootstrap process for setting up claude-sla
 !    if [ ! -f ".github/workflows/ci.yml" ] && [ ! -f ".github/workflows/main.yml" ] && [ ! -d ".github/workflows" ]; then
 !        echo "⚠️  Warning: This appears to be a GitHub repository without GitHub Actions integration."
 !        echo "   Consider setting up GitHub Actions for automated testing and deployment."
-!        echo "   See: <https://docs.github.com/en/actions/quickstart>"
+!        echo "   See: https://docs.github.com/en/actions/quickstart"
 !    else
 !        echo "✅ GitHub Actions integration detected"
 !    fi
@@ -157,6 +157,30 @@ This command provides an interactive bootstrap process for setting up claude-sla
 !if [ "$command_count" -eq 0 ]; then
 !    echo "❌ No commands found after installation"
 !    exit 1
+!fi
+
+!# Setup pre-commit hooks (if in git repo)
+!if git rev-parse --git-dir > /dev/null 2>&1; then
+!    echo
+!    echo "🪝 Setting up pre-commit hooks..."
+!
+!    # Check if pre-commit is installed
+!    if command -v pre-commit > /dev/null 2>&1; then
+!        # Check if .pre-commit-config.yaml exists
+!        if [ -f ".pre-commit-config.yaml" ]; then
+!            echo "📋 Installing pre-commit hooks..."
+!            if pre-commit install; then
+!                echo "✅ Pre-commit hooks installed successfully"
+!            else
+!                echo "⚠️  Warning: Failed to install pre-commit hooks"
+!            fi
+!        else
+!            echo "⚠️  No .pre-commit-config.yaml found - skipping pre-commit setup"
+!        fi
+!    else
+!        echo "⚠️  pre-commit not installed - skipping hook setup"
+!        echo "   Install with: pip install pre-commit (or brew install pre-commit)"
+!    fi
 !fi
 
 !# Show available commands
