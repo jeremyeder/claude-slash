@@ -91,7 +91,7 @@ jobs:
       if: steps.version_type.outputs.skip_bump != 'true'
       run: |
         echo "Bumping ${{ steps.version_type.outputs.version_type }} version..."
-        ./scripts/bump-version.sh ${{ steps.version_type.outputs.version_type }} --push
+        ./scripts/bump-version.sh ${{ steps.version_type.outputs.version_type }} --push --yes
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
