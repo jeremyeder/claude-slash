@@ -20,7 +20,12 @@ on:
 jobs:
   auto-version:
     runs-on: ubuntu-latest
-    
+  jobs:
+    auto-version:
+      runs-on: ubuntu-latest
+      permissions:
+        contents: write  # Allow pushing commits and tags
+   
     # Only run on commits that don't already bump version
     if: "!contains(github.event.head_commit.message, 'Bump version to')"
     
