@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 REPO_URL="https://raw.githubusercontent.com/jeremyeder/claude-slash/main"
 API_URL="https://api.github.com/repos/jeremyeder/claude-slash"
 COMMANDS=("checkpoint.md" "ckpt.md" "restore.md" "rst.md" "update.md" "cr-upgrade.md" "bootstrap.md" "cr-bootstrap.md")
-INSTALLER_VERSION="1.2.0"
+INSTALLER_VERSION="1.2.1"
 
 # Print colored output
 print_status() {
