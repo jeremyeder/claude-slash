@@ -3,6 +3,10 @@ name: Claude Code Review
 on:
   pull_request:
     types: [opened, synchronize]
+    # Skip draft PRs to reduce unnecessary runs
+    branches-ignore:
+      - 'draft/**'
+      - 'wip/**'
 
 jobs:
   claude-review:
@@ -19,6 +23,14 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@beta
@@ -26,14 +38,13 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}  # Add explicit GitHub token
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
-          # Direct prompt for automated review
-          direct_prompt: |
-            Please review this pull request for the claude-slash Python refactor project and provide feedback on:
-            - Code quality and Python best practices
-            - Project structure and packaging
-            - Command implementation patterns
-            - Error handling and user experience
-            - Testing approach
-            - Documentation quality
+          # Performance optimizations
+          timeout_minutes: 5
+          max_turns: 3
+          allowed_tools: "View,Grep,Edit"
 
-            Be constructive and focus on the Python migration from bash scripts.
+          # Streamlined prompt for faster processing
+          direct_prompt: |
+            Review this PR focusing on code quality and Python best practices. Be concise.
+
+            Key areas: implementation patterns, error handling, testing approach.
