@@ -278,6 +278,10 @@ integration points while maintaining full user control over the process.
 !  echo -e "🕐 Timestamp: $timestamp"
 !  echo -e "💾 Backup: $backup_path"
 !  echo -e "📝 Content: $(echo "$learning_content" | head -c 50)..."
+!  echo ""
+!  echo -e "${CYAN}📄 Added Learning Content:${NC}"
+!  echo -e "${CYAN}========================${NC}"
+!  echo "$formatted_learning"
 !else
 !  echo -e "${RED}❌ Integration failed. Your original CLAUDE.md is unchanged.${NC}"
 !  echo -e "${BLUE}🔄 Backup is available at: $backup_path${NC}"
