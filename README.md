@@ -174,3 +174,4 @@ This triggers GitHub Actions to:
 ---
 
 *Made with ❤️ for the Claude Code community*
+<!-- CI trigger -->
