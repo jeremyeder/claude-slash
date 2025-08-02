@@ -59,7 +59,7 @@ integration points while maintaining full user control over the process.
 !
 !Key learnings identified from current session:
 !
-!1. **Clean Feature Branch Management**: When creating feature branches, always cherry-pick specific commits to avoid including unrelated changes in PRs. Use 'git checkout -B feature/name' from clean main, then 'git cherry-pick <commit-hash>' to include only relevant changes.
+!1. **Clean Feature Branch Management**: When creating feature branches, always cherry-pick specific commits to avoid including unrelated changes in PRs. Use 'git checkout -B feature/name' from clean main, then 'git cherry-pick COMMIT_HASH' to include only relevant changes.
 !
 !2. **Force Push Safety**: Use 'git push --force-with-lease' instead of 'git push --force' to safely update feature branches while protecting against overwriting others' work.
 !
