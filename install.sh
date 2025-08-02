@@ -186,6 +186,44 @@ install_user() {
     echo "  • /user:cr-upgrade - Shorthand alias for update"
 }
 
+# Setup pre-commit hooks
+setup_precommit_hooks() {
+    print_status "Setting up pre-commit hooks..."
+    
+    # Check if pre-commit is available
+    if ! command -v pre-commit &> /dev/null; then
+        print_status "Installing pre-commit..."
+        
+        # Try different installation methods
+        if command -v pip3 &> /dev/null; then
+            pip3 install pre-commit
+        elif command -v pip &> /dev/null; then
+            pip install pre-commit
+        else
+            print_error "pip/pip3 not found. Please install pre-commit manually: pip install pre-commit"
+            exit 1
+        fi
+    fi
+    
+    # Install hooks
+    print_status "Installing pre-commit hooks..."
+    if pre-commit install; then
+        print_success "Pre-commit hooks installed successfully!"
+        
+        # Test hooks
+        print_status "Testing pre-commit setup..."
+        if pre-commit run --all-files; then
+            print_success "Pre-commit hooks are working correctly!"
+        else
+            print_warning "Pre-commit hooks found some issues (this is normal for initial setup)"
+            print_status "Run 'pre-commit run --all-files' to see and fix any issues"
+        fi
+    else
+        print_error "Failed to install pre-commit hooks"
+        exit 1
+    fi
+}
+
 # Show version information
 show_version() {
     echo "claude-slash installer v$INSTALLER_VERSION"
@@ -261,12 +299,14 @@ case "${1:-}" in
         echo "  --version   Show version information"
         echo "  --update    Update existing installation to latest release"
         echo "  --global    Install to personal directory (~/.claude/commands/)"
+        echo "  --hooks     Setup pre-commit hooks for quality checks"
         echo "  --help      Show this help message"
         echo
         echo "Examples:"
         echo "  $0                    # Install to current project"
         echo "  $0 --global          # Install for personal use"
         echo "  $0 --update          # Update existing installation"
+        echo "  $0 --hooks           # Setup pre-commit hooks"
         echo "  $0 --version         # Show version information"
         exit 0
         ;;
@@ -276,6 +316,9 @@ case "${1:-}" in
         ;;
     --update)
         update_installation
+        ;;
+    --hooks)
+        setup_precommit_hooks
         ;;
     *)
         main "$@"
