@@ -1,0 +1,100 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "claude-slash"
+version = "1.2.1"
+description = "Custom slash commands for Claude Code CLI"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Jeremy Eder", email = "jeremyeder@users.noreply.github.com" }
+]
+keywords = [
+    "claude",
+    "claude-code", 
+    "cli",
+    "slash-commands",
+    "checkpoint",
+    "session-management"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Shells",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "textual>=0.41.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/jeremyeder/claude-slash"
+Repository = "https://github.com/jeremyeder/claude-slash.git"
+Issues = "https://github.com/jeremyeder/claude-slash/issues"
+
+[project.scripts]
+claude-slash = "claude_slash.main:app"
+
+[tool.hatch.version]
+path = "src/claude_slash/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claude_slash"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --cov=claude_slash"
+testpaths = [
+    "tests",
+]
