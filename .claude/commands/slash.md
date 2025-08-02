@@ -36,7 +36,8 @@ This command displays a comprehensive list of all available claude-slash command
 !  commands_dir="$HOME/.claude/commands"
 !  if [ ! -d "$commands_dir" ]; then
 !    echo -e "${RED}❌ No claude-slash commands found${NC}"
-!    echo "Install commands with: curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash"
+!    echo "Install commands by downloading and running install.sh from:"
+!    echo "https://github.com/jeremyeder/claude-slash"
 !    exit 1
 !  fi
 !fi
