@@ -1,6 +1,6 @@
 # claude-slash
 
-Custom slash commands for Claude Code CLI. This repository provides a collection of useful slash commands that extend Claude Code's functionality.
+Custom slash commands for Claude Code CLI. Save and restore your coding sessions, extract learnings, and enhance your development workflow with powerful slash commands.
 
 ## Features
 
@@ -10,30 +10,18 @@ Custom slash commands for Claude Code CLI. This repository provides a collection
 - **⚙️ `/menuconfig`** - Interactive configuration interface
 - **🔄 `/update`** - Update commands to latest release
 
-## Quick Install
+*All commands have shorthand aliases (e.g., `/cr-bootstrap`, `/mcfg`)*
 
-### Option 1: One-Line Install (Recommended)
+## Installation
+
+### One-Line Install (Recommended)
 ```bash
 curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash
 ```
 
-### Option 2: Manual Installation
+### Global Installation (All Projects)
 ```bash
-# Clone the repository
-git clone https://github.com/jeremyeder/claude-slash.git
-
-# Copy commands to your project
-cp -r claude-slash/.claude/commands .claude/
-
-# Clean up
-rm -rf claude-slash
-```
-
-### Option 3: Global Personal Installation
-```bash
-# For personal use across all projects
-mkdir -p ~/.claude/commands
-cp -r claude-slash/.claude/commands/* ~/.claude/commands/
+curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash -s -- --global
 ```
 
 ## Usage
@@ -139,18 +127,15 @@ Pre-commit hooks automatically run quality checks before each commit to prevent 
 
 - Commands are executed in your local environment
 - No external network calls without explicit user consent
-- All checkpoint data stays local to your git repository
+- All data stays local to your git repository
 - Review command implementations before installation
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/jeremyeder/claude-slash/issues)
 - **Documentation**: [Claude Code Docs](https://docs.anthropic.com/en/docs/claude-code/slash-commands)
-- **Community**: Share your custom commands!
+
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Updating Commands
 
