@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 REPO_URL="https://raw.githubusercontent.com/jeremyeder/claude-slash/main"
 API_URL="https://api.github.com/repos/jeremyeder/claude-slash"
 COMMANDS=("learn.md" "update.md" "cr-upgrade.md" "bootstrap.md" "cr-bootstrap.md" "menuconfig.md" "mcfg.md" "slash.md")
-INSTALLER_VERSION="1.3.0"
+INSTALLER_VERSION="1.4.0"
 
 # Print colored output
 print_status() {
