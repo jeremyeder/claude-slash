@@ -4,10 +4,11 @@ Custom slash commands for Claude Code CLI. This repository provides a collection
 
 ## Features
 
-- **📋 `/project:checkpoint`** - Save session state for future restoration
-- **⚡ `/project:ckpt`** - Shorthand alias for checkpoint command
-- **🔄 `/project:restore`** - Restore session from checkpoint file
-- **⬆️ `/project:rst`** - Shorthand alias for restore command
+- **🎯 `/slash`** - Display all available commands with descriptions
+- **🎓 `/learn`** - Interactive learning and development workflow
+- **📋 `/bootstrap`** - Bootstrap claude-slash installation
+- **⚙️ `/menuconfig`** - Interactive configuration interface
+- **🔄 `/update`** - Update commands to latest release
 
 ## Quick Install
 
@@ -37,69 +38,45 @@ cp -r claude-slash/.claude/commands/* ~/.claude/commands/
 
 ## Usage
 
-### Checkpoint Command
+### Getting Started
 
-Create a checkpoint of your current Claude Code session:
-
-```bash
-# Create a checkpoint with description
-/project:checkpoint "Before major refactor"
-
-# Create a quick checkpoint
-/project:ckpt "Quick save"
-```
-
-### Restore Command
-
-Restore a Claude Code session from a previously created checkpoint:
+After installation, use the `/slash` command to see all available commands:
 
 ```bash
-# Restore from latest checkpoint
-/project:restore
-
-# Restore from specific checkpoint file
-/project:restore checkpoint-2024-07-03-10-30-00.json
-
-# Shorthand version
-/project:rst
+# Display all available commands
+/slash
 ```
 
-#### What Gets Saved
+### Learn Command
 
-- **Git Information**: Current branch, commit hash, status
-- **File Changes**: Staged, modified, and untracked files
-- **Working Directory**: Current path and context
-- **Session Metadata**: Timestamp, user, system info
+The `/learn` command provides an interactive learning and development workflow:
 
-#### Checkpoint Storage
-
-Checkpoints are stored in your git repository at:
-```
-{git-repo-root}/.claude/checkpoints/checkpoint-YYYY-MM-DD-HH-MM-SS.json
-```
-
-#### Restoring a Checkpoint
-
-**Automated Restoration** (Recommended):
 ```bash
-# Restore latest checkpoint automatically
-/project:restore
-
-# Restore specific checkpoint
-/project:restore checkpoint-2024-07-03-10-30-00.json
+# Start interactive learning session
+/learn
 ```
 
-**Manual Restoration** (Alternative):
-1. Share the checkpoint JSON file with Claude in a new session
-2. Claude will help restore the context and working state
-3. Navigate to the correct directory and git branch as indicated
+### Bootstrap Command
+
+Bootstrap a new claude-slash installation:
+
+```bash
+# Bootstrap installation
+/bootstrap
+
+# Bootstrap with options
+/bootstrap --global --force
+```
 
 ## Command Reference
 
 | Command | Alias | Description |
-|---------|--------|-------------|
-| `/project:checkpoint [description]` | `/project:ckpt` | Create a session checkpoint |
-| `/project:restore [checkpoint_file]` | `/project:rst` | Restore from checkpoint (latest if no file specified) |
+|---------|--------|--------------|
+| `/slash` | - | Display all available commands |
+| `/learn` | - | Interactive learning workflow |
+| `/bootstrap` | `/cr-bootstrap` | Bootstrap installation |
+| `/menuconfig` | `/mcfg` | Interactive configuration |
+| `/update` | `/cr-upgrade` | Update to latest release |
 
 ## How It Works
 
@@ -203,10 +180,11 @@ This triggers GitHub Actions to:
 
 ## Roadmap
 
-- [x] Session checkpoint and restoration
-- [x] Automated restore command with checkpoint file override
+- [x] Dynamic command discovery with `/slash`
+- [x] Interactive learning workflow
 - [x] Comprehensive test suite with 28+ test cases
-- [x] Safety checks and git integration
+- [x] Bootstrap installation system
+- [x] Interactive configuration interface
 - [ ] Project templates and scaffolding
 - [ ] Git workflow helpers
 - [ ] Development environment setup commands
