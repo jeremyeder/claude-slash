@@ -265,90 +265,91 @@ if __name__ == \"__main__\":
 
 !# 6. Create README
 !echo -e "${BLUE}6. Generating README.md...${NC}"
-!readme_content="# $project_name
-
-A modern Python project with comprehensive CI/CD and development infrastructure.
-
-## Features
-
-- 🐍 Python-based project structure
-- 🔧 Automated linting and formatting (flake8, black, isort)
-- 📝 Markdown linting
-- 🛡️ Security scanning
-- 🤖 Dependabot dependency updates
-- ✅ Branch protection with required status checks
-- 📚 Comprehensive documentation
-
-## Quick Start
-
-\`\`\`bash
-# Clone the repository
-git clone https://github.com/\$(git config user.name)/$project_name.git
-cd $project_name
-
-# Install dependencies
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
-
-# Run the application
-python src/main.py
-
-# Run tests
-python -m pytest tests/
-\`\`\`
-
-## Development
-
-### Prerequisites
-
-- Python 3.7+
-- pip
-
-### Setup
-
-\`\`\`bash
-# Install development dependencies
-pip install -r requirements-dev.txt
-
-# Run linting
-flake8 .
-black --check .
-isort --check-only .
-
-# Run tests
-python -m pytest tests/ -v
-\`\`\`
-
-### Project Structure
-
-\`\`\`
-$project_name/
-├── src/                 # Source code
-├── tests/               # Test files
-├── docs/                # Documentation
-├── scripts/             # Build and utility scripts
-├── .github/workflows/   # CI/CD workflows
-├── requirements.txt     # Production dependencies
-├── requirements-dev.txt # Development dependencies
-├── README.md           # This file
-└── LICENSE             # MIT License
-\`\`\`
-
-## Contributing
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Built with modern Python development best practices
-- Automated CI/CD pipeline with GitHub Actions  
-- Dependabot for automated dependency management"
-
-!safe_create_file "README.md" "$readme_content"
+!cat > README.md << EOF
+!$project_name
+!
+!A modern Python project with comprehensive CI/CD and development infrastructure.
+!
+!## Features
+!
+!- 🐍 Python-based project structure
+!- 🔧 Automated linting and formatting (flake8, black, isort)
+!- 📝 Markdown linting
+!- 🛡️ Security scanning
+!- 🤖 Dependabot dependency updates
+!- ✅ Branch protection with required status checks
+!- 📚 Comprehensive documentation
+!
+!## Quick Start
+!
+!\`\`\`bash
+!# Clone the repository
+!git clone https://github.com/\$(git config user.name)/$project_name.git
+!cd $project_name
+!
+!# Install dependencies
+!pip install -r requirements.txt
+!pip install -r requirements-dev.txt
+!
+!# Run the application
+!python src/main.py
+!
+!# Run tests
+!python -m pytest tests/
+!\`\`\`
+!
+!## Development
+!
+!### Prerequisites
+!
+!- Python 3.7+
+!- pip
+!
+!### Setup
+!
+!\`\`\`bash
+!# Install development dependencies
+!pip install -r requirements-dev.txt
+!
+!# Run linting
+!flake8 .
+!black --check .
+!isort --check-only .
+!
+!# Run tests
+!python -m pytest tests/ -v
+!\`\`\`
+!
+!### Project Structure
+!
+!\`\`\`
+!$project_name/
+!├── src/                 # Source code
+!├── tests/               # Test files
+!├── docs/                # Documentation
+!├── scripts/             # Build and utility scripts
+!├── .github/workflows/   # CI/CD workflows
+!├── requirements.txt     # Production dependencies
+!├── requirements-dev.txt # Development dependencies
+!├── README.md           # This file
+!└── LICENSE             # MIT License
+!\`\`\`
+!
+!## Contributing
+!
+!Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+!
+!## License
+!
+!This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+!
+!## Acknowledgments
+!
+!- Built with modern Python development best practices
+!- Automated CI/CD pipeline with GitHub Actions  
+!- Dependabot for automated dependency management
+!EOF
+!echo -e "${GREEN}✅ Created README.md${NC}"
 !echo ""
 
 !# 7. Create MIT LICENSE
@@ -454,102 +455,103 @@ SOFTWARE."
 !# Additional infrastructure files
 !echo -e "${BLUE}9. Creating additional infrastructure files...${NC}"
 
-!# .gitignore
-!gitignore_content="# Python
-__pycache__/
-*.py[cod]
-*\$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# PyInstaller
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
-
-# Virtual environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Node.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Logs
-*.log
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Temporary folders
-tmp/
-temp/"
-
-!safe_create_file ".gitignore" "$gitignore_content"
+!# .gitignore content
+!cat > .gitignore << 'EOF'
+!# Python
+!__pycache__/
+!*.py[cod]
+!*$py.class
+!*.so
+!.Python
+!build/
+!develop-eggs/
+!dist/
+!downloads/
+!eggs/
+!.eggs/
+!lib/
+!lib64/
+!parts/
+!sdist/
+!var/
+!wheels/
+!*.egg-info/
+!.installed.cfg
+!*.egg
+!MANIFEST
+!
+!# PyInstaller
+!*.manifest
+!*.spec
+!
+!# Installer logs
+!pip-log.txt
+!pip-delete-this-directory.txt
+!
+!# Unit test / coverage reports
+!htmlcov/
+!.tox/
+!.nox/
+!.coverage
+!.coverage.*
+!.cache
+!nosetests.xml
+!coverage.xml
+!*.cover
+!.hypothesis/
+!.pytest_cache/
+!
+!# Virtual environments
+!.env
+!.venv
+!env/
+!venv/
+!ENV/
+!env.bak/
+!venv.bak/
+!
+!# IDEs
+!.vscode/
+!.idea/
+!*.swp
+!*.swo
+!*~
+!
+!# OS
+!.DS_Store
+!.DS_Store?
+!._*
+!.Spotlight-V100
+!.Trashes
+!ehthumbs.db
+!Thumbs.db
+!
+!# Node.js
+!node_modules/
+!npm-debug.log*
+!yarn-debug.log*
+!yarn-error.log*
+!
+!# Logs
+!*.log
+!
+!# Runtime data
+!pids
+!*.pid
+!*.seed
+!*.pid.lock
+!
+!# Optional npm cache directory
+!.npm
+!
+!# Optional eslint cache
+!.eslintcache
+!
+!# Temporary folders
+!tmp/
+!temp/
+!EOF
+!echo -e "${GREEN}✅ Created .gitignore${NC}"
 
 !# .editorconfig
 !editorconfig_content="root = true
@@ -574,68 +576,69 @@ trim_trailing_whitespace = false"
 !safe_create_file ".editorconfig" "$editorconfig_content"
 
 !# CONTRIBUTING.md
-!contributing_content="# Contributing to $project_name
-
-We love your input! We want to make contributing to $project_name as easy and transparent as possible.
-
-## Development Process
-
-1. Fork the repo and create your branch from \`main\`
-2. If you've added code that should be tested, add tests
-3. If you've changed APIs, update the documentation
-4. Ensure the test suite passes
-5. Make sure your code lints
-6. Issue that pull request!
-
-## Pull Request Process
-
-1. Update the README.md with details of changes to the interface
-2. Update the version numbers in any examples files and the README.md to the new version
-3. The PR will be merged once you have the sign-off of at least one maintainer
-
-## Development Setup
-
-\`\`\`bash
-# Clone your fork
-git clone https://github.com/yourusername/$project_name.git
-cd $project_name
-
-# Install development dependencies
-pip install -r requirements-dev.txt
-
-# Run tests
-python -m pytest tests/
-
-# Run linting
-flake8 .
-black --check .
-isort --check-only .
-\`\`\`
-
-## Code Style
-
-We use several tools to maintain code quality:
-
-- **flake8** for linting
-- **black** for code formatting  
-- **isort** for import sorting
-- **pytest** for testing
-
-Please ensure your code passes all checks before submitting a PR.
-
-## Any contributions you make will be under the MIT Software License
-
-When you submit code changes, your submissions are understood to be under the same [MIT License](LICENSE) that covers the project.
-
-## Report bugs using Github's [issue tracker](https://github.com/\$(git config user.name)/$project_name/issues)
-
-We use GitHub issues to track public bugs. Report a bug by opening a new issue.
-
-## License
-
-By contributing, you agree that your contributions will be licensed under its MIT License."
-
-!safe_create_file "CONTRIBUTING.md" "$contributing_content"
+!cat > CONTRIBUTING.md << EOF
+!# Contributing to $project_name
+!
+!We love your input! We want to make contributing to $project_name as easy and transparent as possible.
+!
+!## Development Process
+!
+!1. Fork the repo and create your branch from \`main\`
+!2. If you've added code that should be tested, add tests
+!3. If you've changed APIs, update the documentation
+!4. Ensure the test suite passes
+!5. Make sure your code lints
+!6. Issue that pull request!
+!
+!## Pull Request Process
+!
+!1. Update the README.md with details of changes to the interface
+!2. Update the version numbers in any examples files and the README.md to the new version
+!3. The PR will be merged once you have the sign-off of at least one maintainer
+!
+!## Development Setup
+!
+!\`\`\`bash
+!# Clone your fork
+!git clone https://github.com/yourusername/$project_name.git
+!cd $project_name
+!
+!# Install development dependencies
+!pip install -r requirements-dev.txt
+!
+!# Run tests
+!python -m pytest tests/
+!
+!# Run linting
+!flake8 .
+!black --check .
+!isort --check-only .
+!\`\`\`
+!
+!## Code Style
+!
+!We use several tools to maintain code quality:
+!
+!- **flake8** for linting
+!- **black** for code formatting  
+!- **isort** for import sorting
+!- **pytest** for testing
+!
+!Please ensure your code passes all checks before submitting a PR.
+!
+!## Any contributions you make will be under the MIT Software License
+!
+!When you submit code changes, your submissions are understood to be under the same [MIT License](LICENSE) that covers the project.
+!
+!## Report bugs using Github's [issue tracker](https://github.com/\$(git config user.name)/$project_name/issues)
+!
+!We use GitHub issues to track public bugs. Report a bug by opening a new issue.
+!
+!## License
+!
+!By contributing, you agree that your contributions will be licensed under its MIT License.
+!EOF
+!echo -e "${GREEN}✅ Created CONTRIBUTING.md${NC}"
 
 !# Python requirements files
 !safe_create_file "requirements.txt" "# Production dependencies
