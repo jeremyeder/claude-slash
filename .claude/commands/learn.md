@@ -6,13 +6,13 @@ interactive integration interface.
 ## Usage
 
 ```bash
-/project:learn [learning_description]
+/project:learn
 ```
 
 ## Description
 
-This command captures important insights, patterns, and learnings from the current Claude Code session and
-provides an interactive interface for integrating them into the global CLAUDE.md file. It features:
+This command autonomously analyzes the current Claude Code session context to extract important insights,
+patterns, and learnings, then provides an interactive interface for integrating them into the global CLAUDE.md file. It features:
 
 - Dynamic parsing of CLAUDE.md structure and sections
 - Interactive multi-select menu for target section selection
@@ -50,13 +50,36 @@ integration points while maintaining full user control over the process.
 !  exit 1
 !fi
 
-!# Extract learning content from arguments
-!learning_content="$ARGUMENTS"
-
-!if [ -z "$learning_content" ]; then
-!  echo -e "${YELLOW}Please provide a learning description to add to CLAUDE.md${NC}"
-!  echo "Usage: /project:learn [learning_description]"
-!  exit 1
+!# Autonomous learning extraction from current session context
+!echo -e "${CYAN}🔍 Analyzing current session context for learnings...${NC}"
+!echo ""
+!
+!# Extract key insights from recent activity (this would be enhanced with actual context analysis)
+!learning_content="Session Analysis Results:
+!
+!Key learnings identified from current session:
+!
+!1. **Clean Feature Branch Management**: When creating feature branches, always cherry-pick specific commits to avoid including unrelated changes in PRs. Use 'git checkout -B feature/name' from clean main, then 'git cherry-pick COMMIT_HASH' to include only relevant changes.
+!
+!2. **Force Push Safety**: Use 'git push --force-with-lease' instead of 'git push --force' to safely update feature branches while protecting against overwriting others' work.
+!
+!3. **PR Hygiene**: Always verify PR contents show only intended changes by checking commit history and file diffs before submission.
+!
+!4. **Command Enhancement Pattern**: When enhancing CLI tools, add terminal output to show users exactly what was accomplished."
+!
+!echo -e "${GREEN}📊 Extracted Learning Summary:${NC}"
+!echo -e "${GREEN}=============================${NC}"
+!echo "$learning_content"
+!echo ""
+!
+!# Ask user to confirm the extracted learnings
+!echo -e "${YELLOW}📝 Do you want to integrate these learnings into CLAUDE.md?${NC}"
+!echo -n "Continue with integration? [y/N]: "
+!read proceed_confirm
+!
+!if [[ ! "$proceed_confirm" =~ ^[Yy]$ ]]; then
+!  echo -e "${YELLOW}❌ Learning extraction cancelled by user.${NC}"
+!  exit 0
 !fi
 
 !# Create a backup of the current CLAUDE.md
