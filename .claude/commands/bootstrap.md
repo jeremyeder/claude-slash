@@ -227,39 +227,49 @@ The command is **fully idempotent** - safe to run multiple times without overwri
 !safe_create_dir "scripts"
 
 !# Create initial Python files
-!safe_create_file "src/__init__.py" "# $project_name package"
-!safe_create_file "src/main.py" "#!/usr/bin/env python3
-\"\"\"
+!echo "# $project_name package" > "src/__init__.py"
+!echo -e "${GREEN}✅ Created src/__init__.py${NC}"
+
+!cat > "src/main.py" << 'EOF'
+#!/usr/bin/env python3
+"""
 Main module for $project_name.
-\"\"\"
+"""
 
 def main():
-    \"\"\"Main entry point.\"\"\"
-    print(\"Hello from $project_name!\")
+    """Main entry point."""
+    print("Hello from $project_name!")
 
-if __name__ == \"__main__\":
-    main()"
+if __name__ == "__main__":
+    main()
+EOF
+!echo -e "${GREEN}✅ Created src/main.py${NC}"
 
-!safe_create_file "tests/__init__.py" ""
-!safe_create_file "tests/test_main.py" "#!/usr/bin/env python3
-\"\"\"
+!touch "tests/__init__.py"
+!echo -e "${GREEN}✅ Created tests/__init__.py${NC}"
+
+!cat > "tests/test_main.py" << 'EOF'
+#!/usr/bin/env python3
+"""
 Tests for main module.
-\"\"\"
+"""
 import unittest
 from src.main import main
 
 class TestMain(unittest.TestCase):
-    \"\"\"Test cases for main module.\"\"\"
+    """Test cases for main module."""
     
     def test_main_runs(self):
-        \"\"\"Test that main function runs without error.\"\"\"
+        """Test that main function runs without error."""
         try:
             main()
         except Exception as e:
-            self.fail(f\"main() raised {e} unexpectedly!\")
+            self.fail(f"main() raised {e} unexpectedly!")
 
-if __name__ == \"__main__\":
-    unittest.main()"
+if __name__ == "__main__":
+    unittest.main()
+EOF
+!echo -e "${GREEN}✅ Created tests/test_main.py${NC}"
 
 !echo ""
 
@@ -641,15 +651,21 @@ trim_trailing_whitespace = false"
 !echo -e "${GREEN}✅ Created CONTRIBUTING.md${NC}"
 
 !# Python requirements files
-!safe_create_file "requirements.txt" "# Production dependencies
-# Add your project dependencies here"
+!cat > requirements.txt << 'EOF'
+# Production dependencies
+# Add your project dependencies here
+EOF
+!echo -e "${GREEN}✅ Created requirements.txt${NC}"
 
-!safe_create_file "requirements-dev.txt" "# Development dependencies
+!cat > requirements-dev.txt << 'EOF'
+# Development dependencies
 flake8>=5.0.0
 black>=22.0.0
 isort>=5.10.0
 pytest>=7.0.0
-pytest-cov>=4.0.0"
+pytest-cov>=4.0.0
+EOF
+!echo -e "${GREEN}✅ Created requirements-dev.txt${NC}"
 
 !echo ""
 
