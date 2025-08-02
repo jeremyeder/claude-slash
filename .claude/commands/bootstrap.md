@@ -227,16 +227,16 @@ The command is **fully idempotent** - safe to run multiple times without overwri
 !safe_create_dir "scripts"
 
 !# Create initial Python files
-!printf '# %s package\n' "$project_name" > "src/__init__.py"
-!echo -e "${GREEN}✅ Created src/__init__.py${NC}"
+!printf '# %s package\n' "$project_name" > "src/\\_\\_init\\_\\_.py"
+!echo -e "${GREEN}✅ Created src/\\_\\_init\\_\\_.py${NC}"
 
-!printf '#!/usr/bin/env python3\n"""\nMain module for %s.\n"""\n\ndef main():\n    """Main entry point."""\n    print("Hello from %s!")\n\nif __name__ == "__main__":\n    main()\n' "$project_name" "$project_name" > "src/main.py"
+!printf '#!/usr/bin/env python3\n"""\nMain module for %s.\n"""\n\ndef main():\n    """Main entry point."""\n    print("Hello from %s!")\n\nif \\_\\_name\\_\\_ == "\\_\\_main\\_\\_":\n    main()\n' "$project_name" "$project_name" > "src/main.py"
 !echo -e "${GREEN}✅ Created src/main.py${NC}"
 
-!touch "tests/__init__.py"
-!echo -e "${GREEN}✅ Created tests/__init__.py${NC}"
+!touch "tests/\\_\\_init\\_\\_.py"
+!echo -e "${GREEN}✅ Created tests/\\_\\_init\\_\\_.py${NC}"
 
-!printf '#!/usr/bin/env python3\n"""\nTests for main module.\n"""\nimport unittest\nfrom src.main import main\n\nclass TestMain(unittest.TestCase):\n    """Test cases for main module."""\n    \n    def test_main_runs(self):\n        """Test that main function runs without error."""\n        try:\n            main()\n        except Exception as e:\n            self.fail(f"main() raised {e} unexpectedly!")\n\nif __name__ == "__main__":\n    unittest.main()\n' > "tests/test_main.py"
+!printf '#!/usr/bin/env python3\n"""\nTests for main module.\n"""\nimport unittest\nfrom src.main import main\n\nclass TestMain(unittest.TestCase):\n    """Test cases for main module."""\n    \n    def test_main_runs(self):\n        """Test that main function runs without error."""\n        try:\n            main()\n        except Exception as e:\n            self.fail(f"main() raised {e} unexpectedly!")\n\nif \\_\\_name\\_\\_ == "\\_\\_main\\_\\_":\n    unittest.main()\n' > "tests/test_main.py"
 !echo -e "${GREEN}✅ Created tests/test_main.py${NC}"
 
 !echo ""
@@ -436,7 +436,7 @@ SOFTWARE."
 !# .gitignore content
 !cat > .gitignore << 'EOF'
 !# Python
-!__pycache__/
+!\\_\\_pycache\\_\\_/
 !*.py[cod]
 !*$py.class
 !*.so
