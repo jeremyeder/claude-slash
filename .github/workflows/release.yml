@@ -49,7 +49,7 @@ jobs:
           git add VERSION install.sh
           git commit -m "Sync VERSION file with release tag ${{ steps.release_info.outputs.tag_name }}
 
-🤖 Generated with [Claude Code](https://claude.ai/code)
+ Generated with [Claude Code](https://claude.ai/code)
 
 Co-Authored-By: Claude <noreply@anthropic.com>"
           git push origin HEAD:main
