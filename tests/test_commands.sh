@@ -37,7 +37,7 @@ test_fail() {
 test_command_files_exist() {
     test_start "Command files exist"
     
-    if [ -f ".claude/commands/checkpoint.md" ] && [ -f ".claude/commands/ckpt.md" ] && [ -f ".claude/commands/restore.md" ] && [ -f ".claude/commands/rst.md" ] && [ -f ".claude/commands/cr-bootstrap.md" ] && [ -f ".claude/commands/bootstrap.md" ] && [ -f ".claude/commands/menuconfig.md" ] && [ -f ".claude/commands/mcfg.md" ]; then
+    if [ -f ".claude/commands/checkpoint.md" ] && [ -f ".claude/commands/ckpt.md" ] && [ -f ".claude/commands/restore.md" ] && [ -f ".claude/commands/rst.md" ] && [ -f ".claude/commands/cr-bootstrap.md" ] && [ -f ".claude/commands/bootstrap.md" ] && [ -f ".claude/commands/menuconfig.md" ] && [ -f ".claude/commands/mcfg.md" ] && [ -f ".claude/commands/learn.md" ] && [ -f ".claude/commands/slash.md" ]; then
         test_pass "All command files found"
     else
         test_fail "Missing command files"
@@ -635,6 +635,32 @@ test_menuconfig_alias() {
     fi
 }
 
+# Test slash command functionality
+test_slash_command() {
+    test_start "Slash command functionality"
+    
+    if [ -f ".claude/commands/slash.md" ]; then
+        # Check for proper structure
+        if grep -q "Display all available custom slash commands" ".claude/commands/slash.md" && \
+           grep -q "/slash" ".claude/commands/slash.md" && \
+           grep -q "extract_description" ".claude/commands/slash.md"; then
+            test_pass "Slash command has proper content and functionality"
+        else
+            test_fail "Slash command missing key functionality"
+        fi
+        
+        # Check if it references command scanning
+        if grep -q "commands_dir" ".claude/commands/slash.md" && \
+           grep -q "*.md" ".claude/commands/slash.md"; then
+            test_pass "Slash command includes dynamic command scanning"
+        else
+            test_fail "Slash command missing dynamic scanning functionality"
+        fi
+    else
+        test_fail "Slash command file not found"
+    fi
+}
+
 # Main test runner
 main() {
     echo "🧪 claude-slash test suite"
@@ -660,6 +686,7 @@ main() {
     test_install_script
     test_menuconfig_functionality
     test_menuconfig_alias
+    test_slash_command
     
     # Summary
     echo
