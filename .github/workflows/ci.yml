@@ -75,7 +75,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-
+    - name: Cache test files and dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          .claude/commands
+          tests
+        key: ${{ runner.os }}-test-files-${{ hashFiles('.claude/commands/**', 'tests/**') }}
+        restore-keys: |
+          ${{ runner.os }}-test-files-
     - name: Validate command files exist
       run: |
         echo "Checking for required command files..."
