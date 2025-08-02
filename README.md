@@ -5,12 +5,9 @@ Custom slash commands for Claude Code CLI. Save and restore your coding sessions
 ## Features
 
 - **🎯 `/slash`** - Display all available commands with descriptions
+- **🔄 `/slash update`** - Update commands to latest release
 - **🎓 `/learn`** - Interactive learning and development workflow
-- **📋 `/bootstrap`** - Bootstrap claude-slash installation
 - **⚙️ `/menuconfig`** - Interactive configuration interface
-- **🔄 `/update`** - Update commands to latest release
-
-*All commands have shorthand aliases (e.g., `/cr-bootstrap`, `/mcfg`)*
 
 ## Installation
 
@@ -44,27 +41,23 @@ The `/learn` command provides an interactive learning and development workflow:
 /learn
 ```
 
-### Bootstrap Command
+### Update Commands
 
-Bootstrap a new claude-slash installation:
+Update your claude-slash commands to the latest release:
 
 ```bash
-# Bootstrap installation
-/bootstrap
-
-# Bootstrap with options
-/bootstrap --global --force
+# Update to latest release
+/slash update
 ```
 
 ## Command Reference
 
-| Command | Alias | Description |
-|---------|--------|--------------|
-| `/slash` | - | Display all available commands |
-| `/learn` | - | Interactive learning workflow |
-| `/bootstrap` | `/cr-bootstrap` | Bootstrap installation |
-| `/menuconfig` | `/mcfg` | Interactive configuration |
-| `/update` | `/cr-upgrade` | Update to latest release |
+| Command | Description |
+|---------|--------------|
+| `/slash` | Display all available commands |
+| `/slash update` | Update to latest release |
+| `/learn` | Interactive learning workflow |
+| `/menuconfig` | Interactive configuration interface |
 
 ## How It Works
 
@@ -144,7 +137,10 @@ MIT License - see [LICENSE](LICENSE) file for details.
 Keep your commands current with the latest features:
 
 ```bash
-# Update via install script
+# Update via slash command
+/slash update
+
+# Or update via install script
 curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash -s -- --update
 ```
 
@@ -166,9 +162,9 @@ This triggers GitHub Actions to:
 ## Roadmap
 
 - [x] Dynamic command discovery with `/slash`
+- [x] Integrated update system with `/slash update`
 - [x] Interactive learning workflow
 - [x] Comprehensive test suite with 28+ test cases
-- [x] Bootstrap installation system
 - [x] Interactive configuration interface
 - [ ] Project templates and scaffolding
 - [ ] Git workflow helpers
