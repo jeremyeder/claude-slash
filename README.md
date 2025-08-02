@@ -1,216 +1,118 @@
 # claude-slash
 
-Custom slash commands for Claude Code CLI. This repository provides a collection of useful slash commands that extend Claude Code's functionality.
+Custom slash commands for Claude Code CLI. Save and restore your coding sessions with powerful checkpoint functionality.
 
 ## Features
 
 - **📋 `/project:checkpoint`** - Save session state for future restoration
-- **⚡ `/project:ckpt`** - Shorthand alias for checkpoint command
-- **🔄 `/project:restore`** - Restore session from checkpoint file
-- **⬆️ `/project:rst`** - Shorthand alias for restore command
+- **🔄 `/project:restore`** - Restore session from checkpoint file  
+- **🧠 `/project:learn`** - Extract and integrate learnings into CLAUDE.md
+- **⬆️ `/project:update`** - Update commands to latest version
+- **🚀 `/project:bootstrap`** - Bootstrap claude-slash installation
+- **⚙️ `/project:menuconfig`** - Interactive configuration management
 
-## Quick Install
+*All commands have shorthand aliases (e.g., `/project:ckpt`, `/project:rst`)*
 
-### Option 1: One-Line Install (Recommended)
+## Installation
+
+### One-Line Install (Recommended)
 ```bash
 curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash
 ```
 
-### Option 2: Manual Installation
+### Global Installation (All Projects)
 ```bash
-# Clone the repository
-git clone https://github.com/jeremyeder/claude-slash.git
-
-# Copy commands to your project
-cp -r claude-slash/.claude/commands .claude/
-
-# Clean up
-rm -rf claude-slash
-```
-
-### Option 3: Global Personal Installation
-```bash
-# For personal use across all projects
-mkdir -p ~/.claude/commands
-cp -r claude-slash/.claude/commands/* ~/.claude/commands/
+curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash -s -- --global
 ```
 
 ## Usage
 
-### Checkpoint Command
-
-Create a checkpoint of your current Claude Code session:
-
+### Session Management
 ```bash
-# Create a checkpoint with description
+# Create a checkpoint
 /project:checkpoint "Before major refactor"
 
-# Create a quick checkpoint
-/project:ckpt "Quick save"
-```
-
-### Restore Command
-
-Restore a Claude Code session from a previously created checkpoint:
-
-```bash
 # Restore from latest checkpoint
 /project:restore
 
-# Restore from specific checkpoint file
+# Restore from specific checkpoint
 /project:restore checkpoint-2024-07-03-10-30-00.json
-
-# Shorthand version
-/project:rst
 ```
 
-#### What Gets Saved
-
-- **Git Information**: Current branch, commit hash, status
-- **File Changes**: Staged, modified, and untracked files
-- **Working Directory**: Current path and context
-- **Session Metadata**: Timestamp, user, system info
-
-#### Checkpoint Storage
-
-Checkpoints are stored in your git repository at:
-```
-{git-repo-root}/.claude/checkpoints/checkpoint-YYYY-MM-DD-HH-MM-SS.json
-```
-
-#### Restoring a Checkpoint
-
-**Automated Restoration** (Recommended):
+### Learning Integration
 ```bash
-# Restore latest checkpoint automatically
-/project:restore
-
-# Restore specific checkpoint
-/project:restore checkpoint-2024-07-03-10-30-00.json
+# Extract session learnings into CLAUDE.md
+/project:learn
 ```
 
-**Manual Restoration** (Alternative):
-1. Share the checkpoint JSON file with Claude in a new session
-2. Claude will help restore the context and working state
-3. Navigate to the correct directory and git branch as indicated
+### Updates & Configuration
+```bash
+# Update to latest version
+/project:update
+
+# Interactive configuration
+/project:menuconfig
+```
+
+## What Gets Saved
+
+Checkpoints capture your complete development context:
+- **Git state**: branch, commit hash, staged/modified files
+- **Working directory**: current path and file structure
+- **Session metadata**: timestamp, user, system info
+
+Checkpoints are stored in `.claude/checkpoints/` within your git repository.
 
 ## Command Reference
 
 | Command | Alias | Description |
-|---------|--------|-------------|
+|---------|-------|-------------|
 | `/project:checkpoint [description]` | `/project:ckpt` | Create a session checkpoint |
-| `/project:restore [checkpoint_file]` | `/project:rst` | Restore from checkpoint (latest if no file specified) |
+| `/project:restore [checkpoint_file]` | `/project:rst` | Restore from checkpoint |
+| `/project:learn` | - | Extract session learnings |
+| `/project:update` | `/project:cr-upgrade` | Update to latest version |
+| `/project:bootstrap` | `/project:cr-bootstrap` | Bootstrap installation |
+| `/project:menuconfig` | `/project:mcfg` | Interactive configuration |
 
-## How It Works
+## Updates
 
-Claude Code slash commands are markdown files stored in `.claude/commands/` that contain:
-- Command documentation
-- Shell script implementations using `!` prefix
-- Dynamic argument handling with `$ARGUMENTS`
+```bash
+# Update existing installation
+curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash -s -- --update
+```
 
 ## Contributing
 
 1. Fork this repository
 2. Create a new command file in `.claude/commands/`
-3. Follow the existing command format
-4. Add documentation and examples
-5. Run linting and tests locally
-6. Submit a pull request
+3. Follow existing command format
+4. Test your changes
+5. Submit a pull request
 
-### Local Development
-
+### Development Setup
 ```bash
-# Set up pre-commit hooks (automated quality checks - RECOMMENDED)
+# Set up quality checks
 ./install.sh --hooks
-
-# Alternative manual setup:
-pip install pre-commit
-pre-commit install
-
-# Run linting manually
-npm run lint
 
 # Run tests
 npm test
-
-# Run both linting and tests
-npm run validate
 ```
-
-### Pre-commit Hooks
-
-Pre-commit hooks automatically run quality checks before each commit to prevent CI failures:
-
-- **Markdown linting** - Ensures consistent markdown formatting
-- **Shell script validation** - Checks shell syntax with shellcheck
-- **File quality checks** - Removes trailing whitespace, ensures proper file endings
-
-**Setup**: Run `./install.sh --hooks` to automatically install and configure pre-commit hooks.
-
-**Manual execution**: `pre-commit run --all-files`
-
-**Skip once**: `git commit --no-verify` (use sparingly)
-
-### Command Development Guidelines
-
-- Use descriptive names and provide aliases for common commands
-- Include comprehensive documentation with usage examples
-- Test commands thoroughly before submitting
-- Ensure security best practices (no hardcoded paths, safe shell operations)
 
 ## Security
 
-- Commands are executed in your local environment
-- No external network calls without explicit user consent
-- All checkpoint data stays local to your git repository
+- Commands execute in your local environment only
+- No external network calls without explicit consent
+- All data stays local to your git repository
 - Review command implementations before installation
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/jeremyeder/claude-slash/issues)
 - **Documentation**: [Claude Code Docs](https://docs.anthropic.com/en/docs/claude-code/slash-commands)
-- **Community**: Share your custom commands!
 
-## Updating Commands
+## License
 
-### Automatic Updates
-
-Keep your commands current with the latest features:
-
-```bash
-# Update via install script
-curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash -s -- --update
-```
-
-### Release Process
-
-New releases are automatically created when tags are pushed:
-
-```bash
-# Create and push a new release tag
-git tag v1.1.0
-git push origin v1.1.0
-```
-
-This triggers GitHub Actions to:
-- Create a GitHub release with changelog
-- Package command files as downloadable assets
-- Make the release available for updates
-
-## Roadmap
-
-- [x] Session checkpoint and restoration
-- [x] Automated restore command with checkpoint file override
-- [x] Comprehensive test suite with 28+ test cases
-- [x] Safety checks and git integration
-- [ ] Project templates and scaffolding
-- [ ] Git workflow helpers
-- [ ] Development environment setup commands
-- [ ] Integration with popular tools (Docker, Kubernetes, etc.)
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
