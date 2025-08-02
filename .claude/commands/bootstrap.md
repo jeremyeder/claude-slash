@@ -137,7 +137,7 @@ The command is **fully idempotent** - safe to run multiple times without overwri
 !    - name: Set up Python
 !      uses: actions/setup-python@v4
 !      with:
-!        python-version: "3.x"
+!        python-version: "3.13"
 !    - name: Install dependencies
 !      run: |
 !        python -m pip install --upgrade pip
@@ -280,7 +280,7 @@ The command is **fully idempotent** - safe to run multiple times without overwri
 !
 !### Prerequisites
 !
-!- Python 3.7+
+!- Python 3.13+
 !- pip
 !
 !### Setup
