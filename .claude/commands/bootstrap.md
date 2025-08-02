@@ -597,10 +597,10 @@ trim_trailing_whitespace = false"
 !
 !We use several tools to maintain code quality:
 !
-!- **flake8** for linting
-!- **black** for code formatting  
-!- **isort** for import sorting
-!- **pytest** for testing
+!- _flake8_ for linting
+!- _black_ for code formatting  
+!- _isort_ for import sorting
+!- _pytest_ for testing
 !
 !Please ensure your code passes all checks before submitting a PR.
 !
