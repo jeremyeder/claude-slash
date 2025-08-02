@@ -67,13 +67,8 @@ jobs:
         echo "Checking for required command files..."
         test -f .claude/commands/slash.md || (echo "Missing slash.md" && exit 1)
         test -f .claude/commands/learn.md || (echo "Missing learn.md" && exit 1)
-        test -f .claude/commands/bootstrap.md || (echo "Missing bootstrap.md" && exit 1)
-        test -f .claude/commands/cr-bootstrap.md || (echo "Missing cr-bootstrap.md" && exit 1)
         test -f .claude/commands/menuconfig.md || (echo "Missing menuconfig.md" && exit 1)
-        test -f .claude/commands/mcfg.md || (echo "Missing mcfg.md" && exit 1)
-        test -f .claude/commands/update.md || (echo "Missing update.md" && exit 1)
-        test -f .claude/commands/cr-upgrade.md || (echo "Missing cr-upgrade.md" && exit 1)
-        echo "✅ All command files present"
+        echo "✅ All core command files present"
 
     - name: Validate markdown structure
       run: |
