@@ -1,13 +1,18 @@
 # claude-slash
 
-Custom slash commands for Claude Code CLI. This repository provides a collection of useful slash commands that extend Claude Code's functionality.
+Custom slash commands for Claude Code CLI. Save and restore your coding sessions, extract learnings, and enhance your development workflow with powerful slash commands.
 
 ## Features
 
-- **📋 `/project:checkpoint`** - Save session state for future restoration
-- **⚡ `/project:ckpt`** - Shorthand alias for checkpoint command
-- **🔄 `/project:restore`** - Restore session from checkpoint file
-- **⬆️ `/project:rst`** - Shorthand alias for restore command
+- **📋 `/slash`** - Display all available commands with descriptions
+- **💾 `/checkpoint`** - Save session state for future restoration
+- **🔄 `/restore`** - Restore session from checkpoint file  
+- **🧠 `/learn`** - Extract and integrate learnings into CLAUDE.md
+- **⬆️ `/update`** - Update commands to latest version
+- **🚀 `/bootstrap`** - Bootstrap claude-slash installation
+- **⚙️ `/menuconfig`** - Interactive configuration management
+
+*All commands have shorthand aliases (e.g., `/ckpt`, `/rst`)*
 
 ## Quick Install
 
@@ -37,31 +42,40 @@ cp -r claude-slash/.claude/commands/* ~/.claude/commands/
 
 ## Usage
 
-### Checkpoint Command
+### Command Discovery
 
-Create a checkpoint of your current Claude Code session:
+Get help and see all available commands:
 
 ```bash
-# Create a checkpoint with description
-/project:checkpoint "Before major refactor"
-
-# Create a quick checkpoint
-/project:ckpt "Quick save"
+# Display all available commands
+/slash
 ```
 
-### Restore Command
-
-Restore a Claude Code session from a previously created checkpoint:
-
+### Session Management
 ```bash
+# Create a checkpoint
+/checkpoint "Before major refactor"
+
 # Restore from latest checkpoint
-/project:restore
+/restore
 
-# Restore from specific checkpoint file
-/project:restore checkpoint-2024-07-03-10-30-00.json
+# Restore from specific checkpoint
+/restore checkpoint-2024-07-03-10-30-00.json
+```
 
-# Shorthand version
-/project:rst
+### Learning Integration
+```bash
+# Extract session learnings into CLAUDE.md
+/learn
+```
+
+### Updates & Configuration
+```bash
+# Update to latest version
+/update
+
+# Interactive configuration
+/menuconfig
 ```
 
 #### What Gets Saved
@@ -97,9 +111,14 @@ Checkpoints are stored in your git repository at:
 ## Command Reference
 
 | Command | Alias | Description |
-|---------|--------|-------------|
-| `/project:checkpoint [description]` | `/project:ckpt` | Create a session checkpoint |
-| `/project:restore [checkpoint_file]` | `/project:rst` | Restore from checkpoint (latest if no file specified) |
+|---------|-------|-------------|
+| `/slash` | - | Display all available commands with descriptions |
+| `/checkpoint [description]` | `/ckpt` | Create a session checkpoint |
+| `/restore [checkpoint_file]` | `/rst` | Restore from checkpoint |
+| `/learn` | - | Extract session learnings |
+| `/update` | `/cr-upgrade` | Update to latest version |
+| `/bootstrap` | `/cr-bootstrap` | Bootstrap installation |
+| `/menuconfig` | `/mcfg` | Interactive configuration |
 
 ## How It Works
 

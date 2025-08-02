@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 # GitHub repository details
 REPO_URL="https://raw.githubusercontent.com/jeremyeder/claude-slash/main"
 API_URL="https://api.github.com/repos/jeremyeder/claude-slash"
-COMMANDS=("checkpoint.md" "ckpt.md" "restore.md" "rst.md" "update.md" "cr-upgrade.md" "bootstrap.md" "cr-bootstrap.md")
+COMMANDS=("checkpoint.md" "ckpt.md" "restore.md" "rst.md" "update.md" "cr-upgrade.md" "bootstrap.md" "cr-bootstrap.md" "learn.md" "menuconfig.md" "mcfg.md" "slash.md")
 INSTALLER_VERSION="1.2.1"
 
 # Print colored output
@@ -64,12 +64,13 @@ install_project() {
     
     print_success "Commands installed to .claude/commands/"
     print_status "Available commands:"
-    echo "  • /project:checkpoint [description] - Create a session checkpoint"
-    echo "  • /project:ckpt [description] - Shorthand alias"
-    echo "  • /project:restore [checkpoint] - Restore from a checkpoint"
-    echo "  • /project:rst [checkpoint] - Shorthand alias"
-    echo "  • /project:update - Update commands to latest release"
-    echo "  • /project:cr-upgrade - Shorthand alias for update"
+    echo "  • /slash - Display all available commands"
+    echo "  • /checkpoint [description] - Create a session checkpoint"
+    echo "  • /restore [checkpoint] - Restore from a checkpoint"
+    echo "  • /learn - Extract session learnings into CLAUDE.md"
+    echo "  • /update - Update commands to latest release"
+    echo "  • /bootstrap - Bootstrap claude-slash installation"
+    echo "  • /menuconfig - Interactive configuration management"
 }
 
 # Update existing installation
@@ -178,12 +179,13 @@ install_user() {
     
     print_success "Commands installed to ~/.claude/commands/"
     print_status "Available commands:"
-    echo "  • /user:checkpoint [description] - Create a session checkpoint"
-    echo "  • /user:ckpt [description] - Shorthand alias"
-    echo "  • /user:restore [checkpoint] - Restore from a checkpoint"
-    echo "  • /user:rst [checkpoint] - Shorthand alias"
-    echo "  • /user:update - Update commands to latest release"
-    echo "  • /user:cr-upgrade - Shorthand alias for update"
+    echo "  • /slash - Display all available commands"
+    echo "  • /checkpoint [description] - Create a session checkpoint"
+    echo "  • /restore [checkpoint] - Restore from a checkpoint"
+    echo "  • /learn - Extract session learnings into CLAUDE.md"
+    echo "  • /update - Update commands to latest release"
+    echo "  • /bootstrap - Bootstrap claude-slash installation"
+    echo "  • /menuconfig - Interactive configuration management"
 }
 
 # Setup pre-commit hooks
@@ -283,8 +285,9 @@ main() {
     echo
     print_status "Next steps:"
     echo "1. Open Claude Code CLI in your project"
-    echo "2. Try: /project:checkpoint \"Test checkpoint\""
-    echo "3. Update anytime with: /project:update"
+    echo "2. Try: /slash to see all available commands"
+    echo "3. Use: /learn to extract session insights"
+    echo "4. Update anytime with: /update"
     echo
     print_status "For more information, visit:"
     echo "https://github.com/jeremyeder/claude-slash"
