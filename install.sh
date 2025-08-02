@@ -47,10 +47,10 @@ check_git_repo() {
 # Install commands to project directory
 install_project() {
     print_status "Installing commands for current project..."
-    
+
     # Create commands directory
     mkdir -p .claude/commands
-    
+
     # Download each command file
     for cmd in "${COMMANDS[@]}"; do
         print_status "Downloading $cmd..."
@@ -61,7 +61,7 @@ install_project() {
             exit 1
         fi
     done
-    
+
     print_success "Commands installed to .claude/commands/"
     print_status "Available commands:"
     echo "  • /project:checkpoint [description] - Create a session checkpoint"
@@ -75,11 +75,11 @@ install_project() {
 # Update existing installation
 update_installation() {
     print_status "🔄 Updating claude-slash commands..."
-    
+
     # Determine installation location
     local install_dir=""
     local install_type=""
-    
+
     if [ -d ".claude/commands" ]; then
         install_dir=".claude/commands"
         install_type="project"
@@ -91,9 +91,9 @@ update_installation() {
         print_status "Run the installer first: $0"
         exit 1
     fi
-    
+
     print_status "Found $install_type installation at: $install_dir"
-    
+
     # Check for latest release
     print_status "🔍 Checking latest release..."
     local latest_info
@@ -101,28 +101,28 @@ update_installation() {
         print_error "Failed to check for updates (network error)"
         exit 1
     fi
-    
+
     local latest_tag
     latest_tag=$(echo "$latest_info" | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
-    
+
     if [ -z "$latest_tag" ]; then
         print_error "Could not determine latest version"
         exit 1
     fi
-    
+
     print_status "📦 Latest release: $latest_tag"
-    
+
     # Create backup
     local backup_dir
     backup_dir="$install_dir.backup.$(date +%Y%m%d-%H%M%S)"
     print_status "💾 Creating backup at: $backup_dir"
     cp -r "$install_dir" "$backup_dir"
-    
+
     # Download and extract latest release
     local temp_dir
     temp_dir=$(mktemp -d)
     print_status "⬇️  Downloading latest release..."
-    
+
     if ! curl -sL "$API_URL/tarball/$latest_tag" | tar -xz -C "$temp_dir" --strip-components=1; then
         print_error "Failed to download release"
         print_status "🔄 Restoring from backup..."
@@ -131,29 +131,29 @@ update_installation() {
         rm -rf "$temp_dir"
         exit 1
     fi
-    
+
     # Update commands
     if [ -d "$temp_dir/.claude/commands" ]; then
         print_status "🔄 Updating commands..."
-        
+
         # Remove old commands
         find "$install_dir" -name "*.md" -delete
-        
+
         # Copy new commands
         cp "$temp_dir/.claude/commands/"*.md "$install_dir/"
-        
+
         print_success "✅ Update completed successfully!"
         print_status "📦 Updated to: $latest_tag"
         print_status "📁 Backup saved to: $backup_dir"
         print_status "🗑️  Remove backup with: rm -rf $backup_dir"
-        
+
     else
         print_error "Downloaded release doesn't contain command files"
         print_status "🔄 Restoring from backup..."
         rm -rf "$install_dir"
         mv "$backup_dir" "$install_dir"
     fi
-    
+
     # Cleanup
     rm -rf "$temp_dir"
 }
@@ -161,10 +161,10 @@ update_installation() {
 # Install commands to user directory
 install_user() {
     print_status "Installing commands for personal use..."
-    
+
     # Create user commands directory
     mkdir -p ~/.claude/commands
-    
+
     # Download each command file
     for cmd in "${COMMANDS[@]}"; do
         print_status "Downloading $cmd..."
@@ -175,7 +175,7 @@ install_user() {
             exit 1
         fi
     done
-    
+
     print_success "Commands installed to ~/.claude/commands/"
     print_status "Available commands:"
     echo "  • /user:checkpoint [description] - Create a session checkpoint"
@@ -189,7 +189,7 @@ install_user() {
 # Show version information
 show_version() {
     echo "claude-slash installer v$INSTALLER_VERSION"
-    
+
     # Get latest release version from GitHub
     print_status "Checking latest release version..."
     local latest_info
@@ -206,27 +206,103 @@ show_version() {
     fi
 }
 
+# Set up pre-commit hooks
+setup_precommit_hooks() {
+    print_status "Setting up pre-commit hooks for quality checks..."
+
+    # Check if we're in a git repository
+    if ! check_git_repo; then
+        print_error "Not in a git repository. Pre-commit hooks require a git repository."
+        exit 1
+    fi
+
+    # Check if pre-commit is installed
+    if ! command -v pre-commit &> /dev/null; then
+        print_warning "pre-commit is not installed. Attempting to install..."
+
+        # Try different installation methods
+        if command -v pip &> /dev/null; then
+            print_status "Installing pre-commit via pip..."
+            pip install --user pre-commit
+        elif command -v pip3 &> /dev/null; then
+            print_status "Installing pre-commit via pip3..."
+            pip3 install --user pre-commit
+        elif command -v brew &> /dev/null; then
+            print_status "Installing pre-commit via Homebrew..."
+            brew install pre-commit
+        elif command -v apt-get &> /dev/null; then
+            print_status "Installing pre-commit via apt-get..."
+            sudo apt-get update && sudo apt-get install -y pre-commit
+        else
+            print_error "Could not install pre-commit automatically."
+            print_status "Please install pre-commit manually:"
+            echo "  pip install pre-commit    # or"
+            echo "  brew install pre-commit   # or"
+            echo "  apt-get install pre-commit"
+            exit 1
+        fi
+
+        # Verify installation
+        if ! command -v pre-commit &> /dev/null; then
+            print_error "pre-commit installation failed. Please install manually."
+            exit 1
+        fi
+    fi
+
+    # Download .pre-commit-config.yaml if it doesn't exist
+    if [[ ! -f ".pre-commit-config.yaml" ]]; then
+        print_status "Downloading .pre-commit-config.yaml..."
+        curl -fsSL "$REPO_URL/.pre-commit-config.yaml" -o ".pre-commit-config.yaml"
+        if [[ $? -ne 0 ]]; then
+            print_error "Failed to download .pre-commit-config.yaml"
+            exit 1
+        fi
+        print_success "Downloaded .pre-commit-config.yaml"
+    else
+        print_status ".pre-commit-config.yaml already exists"
+    fi
+
+    # Install pre-commit hooks
+    print_status "Installing pre-commit hooks..."
+    pre-commit install
+
+    if [[ $? -eq 0 ]]; then
+        print_success "Pre-commit hooks installed successfully!"
+        echo
+        print_status "Pre-commit hooks will now run automatically on commit to check:"
+        echo "  ✓ Markdown files (markdownlint)"
+        echo "  ✓ Shell scripts (shellcheck)"
+        echo "  ✓ File quality (trailing whitespace, file endings, etc.)"
+        echo
+        print_status "To run checks manually: pre-commit run --all-files"
+        print_status "To skip hooks once: git commit --no-verify"
+    else
+        print_error "Failed to install pre-commit hooks"
+        exit 1
+    fi
+}
+
 # Main installation logic
 main() {
     echo "🚀 claude-slash installer v$INSTALLER_VERSION"
     echo "============================================="
     echo
-    
+
     # Check for required tools
     if ! command -v curl &> /dev/null; then
         print_error "curl is required but not installed. Please install curl first."
         exit 1
     fi
-    
+
     if ! command -v git &> /dev/null; then
         print_error "git is required but not installed. Please install git first."
         exit 1
     fi
-    
+
     # Determine installation type
     if check_git_repo; then
         print_status "Git repository detected"
-        
+
         # Check for --global flag
         if [[ "$1" == "--global" ]]; then
             install_user
@@ -239,7 +315,7 @@ main() {
         print_status "Installing to personal directory (~/.claude/commands/)"
         install_user
     fi
-    
+
     echo
     print_success "Installation complete!"
     echo
@@ -261,12 +337,14 @@ case "${1:-}" in
         echo "  --version   Show version information"
         echo "  --update    Update existing installation to latest release"
         echo "  --global    Install to personal directory (~/.claude/commands/)"
+        echo "  --hooks     Set up pre-commit hooks for quality checks"
         echo "  --help      Show this help message"
         echo
         echo "Examples:"
         echo "  $0                    # Install to current project"
         echo "  $0 --global          # Install for personal use"
         echo "  $0 --update          # Update existing installation"
+        echo "  $0 --hooks           # Set up pre-commit hooks"
         echo "  $0 --version         # Show version information"
         exit 0
         ;;
@@ -276,6 +354,9 @@ case "${1:-}" in
         ;;
     --update)
         update_installation
+        ;;
+    --hooks)
+        setup_precommit_hooks
         ;;
     *)
         main "$@"

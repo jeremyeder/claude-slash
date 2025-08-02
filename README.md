@@ -120,24 +120,36 @@ Claude Code slash commands are markdown files stored in `.claude/commands/` that
 ### Local Development
 
 ```bash
-# Install pre-commit hooks (optional but recommended)
+# Set up pre-commit hooks (automated quality checks - RECOMMENDED)
+./install.sh --hooks
+
+# Alternative manual setup:
 pip install pre-commit
 pre-commit install
 
-# Run linting
-npm install -g markdownlint-cli
-markdownlint --config .markdownlint.json *.md .claude/commands/*.md
-
-# Install shellcheck (varies by OS)
-# macOS: brew install shellcheck
-# Ubuntu: sudo apt-get install shellcheck
+# Run linting manually
+npm run lint
 
 # Run tests
-./tests/test_commands.sh
+npm test
 
-# Test update functionality
-./tests/test_update.sh
+# Run both linting and tests
+npm run validate
 ```
+
+### Pre-commit Hooks
+
+Pre-commit hooks automatically run quality checks before each commit to prevent CI failures:
+
+- **Markdown linting** - Ensures consistent markdown formatting
+- **Shell script validation** - Checks shell syntax with shellcheck
+- **File quality checks** - Removes trailing whitespace, ensures proper file endings
+
+**Setup**: Run `./install.sh --hooks` to automatically install and configure pre-commit hooks.
+
+**Manual execution**: `pre-commit run --all-files`
+
+**Skip once**: `git commit --no-verify` (use sparingly)
 
 ### Command Development Guidelines
 
