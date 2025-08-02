@@ -437,8 +437,8 @@ SOFTWARE."
 !cat > .gitignore << 'EOF'
 !# Python
 !\\_\\_pycache\\_\\_/
-!*.py[cod]
-!*$py.class
+!\*.py[cod]
+!\*$py.class
 !*.so
 !.Python
 !build/
