@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # claude-slash installer
-# Installs Claude Code slash commands for checkpoint functionality
+# Installs Claude Code slash commands for enhanced development workflows
 
 set -e
 
@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 # GitHub repository details
 REPO_URL="https://raw.githubusercontent.com/jeremyeder/claude-slash/main"
 API_URL="https://api.github.com/repos/jeremyeder/claude-slash"
-COMMANDS=("checkpoint.md" "ckpt.md" "restore.md" "rst.md" "update.md" "cr-upgrade.md" "bootstrap.md" "cr-bootstrap.md" "learn.md" "menuconfig.md" "mcfg.md" "slash.md")
+COMMANDS=("learn.md" "update.md" "cr-upgrade.md" "bootstrap.md" "cr-bootstrap.md" "menuconfig.md" "mcfg.md" "slash.md")
 INSTALLER_VERSION="1.2.1"
 
 # Print colored output
@@ -47,10 +47,10 @@ check_git_repo() {
 # Install commands to project directory
 install_project() {
     print_status "Installing commands for current project..."
-    
+
     # Create commands directory
     mkdir -p .claude/commands
-    
+
     # Download each command file
     for cmd in "${COMMANDS[@]}"; do
         print_status "Downloading $cmd..."
@@ -61,26 +61,23 @@ install_project() {
             exit 1
         fi
     done
-    
+
     print_success "Commands installed to .claude/commands/"
     print_status "Available commands:"
     echo "  • /slash - Display all available commands"
-    echo "  • /checkpoint [description] - Create a session checkpoint"
-    echo "  • /restore [checkpoint] - Restore from a checkpoint"
-    echo "  • /learn - Extract session learnings into CLAUDE.md"
+    echo "  • /learn - Interactive learning command"
     echo "  • /update - Update commands to latest release"
-    echo "  • /bootstrap - Bootstrap claude-slash installation"
-    echo "  • /menuconfig - Interactive configuration management"
+    echo "  • /cr-upgrade - Shorthand alias for update"
 }
 
 # Update existing installation
 update_installation() {
     print_status "🔄 Updating claude-slash commands..."
-    
+
     # Determine installation location
     local install_dir=""
     local install_type=""
-    
+
     if [ -d ".claude/commands" ]; then
         install_dir=".claude/commands"
         install_type="project"
@@ -92,9 +89,9 @@ update_installation() {
         print_status "Run the installer first: $0"
         exit 1
     fi
-    
+
     print_status "Found $install_type installation at: $install_dir"
-    
+
     # Check for latest release
     print_status "🔍 Checking latest release..."
     local latest_info
@@ -102,28 +99,28 @@ update_installation() {
         print_error "Failed to check for updates (network error)"
         exit 1
     fi
-    
+
     local latest_tag
     latest_tag=$(echo "$latest_info" | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
-    
+
     if [ -z "$latest_tag" ]; then
         print_error "Could not determine latest version"
         exit 1
     fi
-    
+
     print_status "📦 Latest release: $latest_tag"
-    
+
     # Create backup
     local backup_dir
     backup_dir="$install_dir.backup.$(date +%Y%m%d-%H%M%S)"
     print_status "💾 Creating backup at: $backup_dir"
     cp -r "$install_dir" "$backup_dir"
-    
+
     # Download and extract latest release
     local temp_dir
     temp_dir=$(mktemp -d)
     print_status "⬇️  Downloading latest release..."
-    
+
     if ! curl -sL "$API_URL/tarball/$latest_tag" | tar -xz -C "$temp_dir" --strip-components=1; then
         print_error "Failed to download release"
         print_status "🔄 Restoring from backup..."
@@ -132,29 +129,29 @@ update_installation() {
         rm -rf "$temp_dir"
         exit 1
     fi
-    
+
     # Update commands
     if [ -d "$temp_dir/.claude/commands" ]; then
         print_status "🔄 Updating commands..."
-        
+
         # Remove old commands
         find "$install_dir" -name "*.md" -delete
-        
+
         # Copy new commands
         cp "$temp_dir/.claude/commands/"*.md "$install_dir/"
-        
+
         print_success "✅ Update completed successfully!"
         print_status "📦 Updated to: $latest_tag"
         print_status "📁 Backup saved to: $backup_dir"
         print_status "🗑️  Remove backup with: rm -rf $backup_dir"
-        
+
     else
         print_error "Downloaded release doesn't contain command files"
         print_status "🔄 Restoring from backup..."
         rm -rf "$install_dir"
         mv "$backup_dir" "$install_dir"
     fi
-    
+
     # Cleanup
     rm -rf "$temp_dir"
 }
@@ -162,10 +159,10 @@ update_installation() {
 # Install commands to user directory
 install_user() {
     print_status "Installing commands for personal use..."
-    
+
     # Create user commands directory
     mkdir -p ~/.claude/commands
-    
+
     # Download each command file
     for cmd in "${COMMANDS[@]}"; do
         print_status "Downloading $cmd..."
@@ -176,26 +173,23 @@ install_user() {
             exit 1
         fi
     done
-    
+
     print_success "Commands installed to ~/.claude/commands/"
     print_status "Available commands:"
     echo "  • /slash - Display all available commands"
-    echo "  • /checkpoint [description] - Create a session checkpoint"
-    echo "  • /restore [checkpoint] - Restore from a checkpoint"
-    echo "  • /learn - Extract session learnings into CLAUDE.md"
+    echo "  • /learn - Interactive learning command"
     echo "  • /update - Update commands to latest release"
-    echo "  • /bootstrap - Bootstrap claude-slash installation"
-    echo "  • /menuconfig - Interactive configuration management"
+    echo "  • /cr-upgrade - Shorthand alias for update"
 }
 
 # Setup pre-commit hooks
 setup_precommit_hooks() {
     print_status "Setting up pre-commit hooks..."
-    
+
     # Check if pre-commit is available
     if ! command -v pre-commit &> /dev/null; then
         print_status "Installing pre-commit..."
-        
+
         # Try different installation methods
         if command -v pip3 &> /dev/null; then
             pip3 install pre-commit
@@ -206,12 +200,12 @@ setup_precommit_hooks() {
             exit 1
         fi
     fi
-    
+
     # Install hooks
     print_status "Installing pre-commit hooks..."
     if pre-commit install; then
         print_success "Pre-commit hooks installed successfully!"
-        
+
         # Test hooks
         print_status "Testing pre-commit setup..."
         if pre-commit run --all-files; then
@@ -229,7 +223,7 @@ setup_precommit_hooks() {
 # Show version information
 show_version() {
     echo "claude-slash installer v$INSTALLER_VERSION"
-    
+
     # Get latest release version from GitHub
     print_status "Checking latest release version..."
     local latest_info
@@ -251,22 +245,22 @@ main() {
     echo "🚀 claude-slash installer v$INSTALLER_VERSION"
     echo "============================================="
     echo
-    
+
     # Check for required tools
     if ! command -v curl &> /dev/null; then
         print_error "curl is required but not installed. Please install curl first."
         exit 1
     fi
-    
+
     if ! command -v git &> /dev/null; then
         print_error "git is required but not installed. Please install git first."
         exit 1
     fi
-    
+
     # Determine installation type
     if check_git_repo; then
         print_status "Git repository detected"
-        
+
         # Check for --global flag
         if [[ "$1" == "--global" ]]; then
             install_user
@@ -279,15 +273,14 @@ main() {
         print_status "Installing to personal directory (~/.claude/commands/)"
         install_user
     fi
-    
+
     echo
     print_success "Installation complete!"
     echo
     print_status "Next steps:"
     echo "1. Open Claude Code CLI in your project"
     echo "2. Try: /slash to see all available commands"
-    echo "3. Use: /learn to extract session insights"
-    echo "4. Update anytime with: /update"
+    echo "3. Update anytime with: /update"
     echo
     print_status "For more information, visit:"
     echo "https://github.com/jeremyeder/claude-slash"
