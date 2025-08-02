@@ -10,6 +10,14 @@ from typing import Any, Dict, Optional
 import typer
 from rich.console import Console
 
+from ..ui import (
+    get_console,
+    format_error_message,
+    format_success_message,
+    format_info_message,
+    format_warning_message
+)
+
 
 class BaseCommand(ABC):
     """
@@ -20,8 +28,8 @@ class BaseCommand(ABC):
     """
     
     def __init__(self):
-        """Initialize the base command with a console for output."""
-        self.console = Console()
+        """Initialize the base command with a shared console for output."""
+        self.console = get_console()
     
     @property
     @abstractmethod
@@ -69,19 +77,19 @@ class BaseCommand(ABC):
         
         return command_wrapper
     
-    def error(self, message: str) -> None:
+    def error(self, message: str, details: Optional[str] = None) -> None:
         """Print an error message and exit."""
-        self.console.print(f"[bold red]Error:[/bold red] {message}")
+        self.console.print(format_error_message(message, details))
         raise typer.Exit(1)
     
-    def success(self, message: str) -> None:
+    def success(self, message: str, details: Optional[str] = None) -> None:
         """Print a success message."""
-        self.console.print(f"[bold green]Success:[/bold green] {message}")
+        self.console.print(format_success_message(message, details))
     
-    def info(self, message: str) -> None:
+    def info(self, message: str, details: Optional[str] = None) -> None:
         """Print an informational message."""
-        self.console.print(f"[bold blue]Info:[/bold blue] {message}")
+        self.console.print(format_info_message(message, details))
     
-    def warning(self, message: str) -> None:
+    def warning(self, message: str, details: Optional[str] = None) -> None:
         """Print a warning message."""
-        self.console.print(f"[bold yellow]Warning:[/bold yellow] {message}")
+        self.console.print(format_warning_message(message, details))

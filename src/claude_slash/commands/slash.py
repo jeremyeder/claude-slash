@@ -19,6 +19,7 @@ from rich.panel import Panel
 from rich.text import Text
 
 from .base import BaseCommand
+from ..ui import SpinnerManager, ProgressManager, track_operation
 
 
 class SlashCommand(BaseCommand):
@@ -146,21 +147,21 @@ class SlashCommand(BaseCommand):
 
         self.console.print(f"📍 Found {install_type} installation at: {install_dir}")
 
-        # Check for latest release using gh CLI
-        self.console.print("🔍 Checking latest release...")
-        try:
-            result = subprocess.run(
-                ["gh", "api", "repos/jeremyeder/claude-slash/releases/latest"],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            latest_info = json.loads(result.stdout)
-            latest_tag = latest_info.get("tag_name")
-            
-            if not latest_tag:
-                self.error("❌ Could not determine latest version")
-                return
+        # Check for latest release using gh CLI with spinner
+        with SpinnerManager.network_operation("🔍 Checking for latest release...") as status:
+            try:
+                result = subprocess.run(
+                    ["gh", "api", "repos/jeremyeder/claude-slash/releases/latest"],
+                    capture_output=True,
+                    text=True,
+                    check=True
+                )
+                latest_info = json.loads(result.stdout)
+                latest_tag = latest_info.get("tag_name")
+                
+                if not latest_tag:
+                    self.error("❌ Could not determine latest version")
+                    return
 
         except subprocess.CalledProcessError:
             self.error("❌ Failed to check for updates (network error or gh CLI not available)")
@@ -180,37 +181,43 @@ class SlashCommand(BaseCommand):
             self.error(f"❌ Failed to create backup: {e}")
             return
 
-        # Download and extract latest release using gh CLI
-        self.console.print("⬇️  Downloading latest release...")
-        
+        # Download and extract latest release using gh CLI with progress tracking
         with tempfile.TemporaryDirectory() as temp_dir:
             try:
-                # Download the tarball using gh CLI
-                tarball_path = os.path.join(temp_dir, "claude-slash.tar.gz")
-                subprocess.run(
-                    ["gh", "api", f"repos/jeremyeder/claude-slash/tarball/{latest_tag}"],
-                    stdout=open(tarball_path, "wb"),
-                    check=True
-                )
+                # Download the tarball using gh CLI with spinner
+                with SpinnerManager.network_operation("⬇️ Downloading latest release...") as status:
+                    tarball_path = os.path.join(temp_dir, "claude-slash.tar.gz")
+                    subprocess.run(
+                        ["gh", "api", f"repos/jeremyeder/claude-slash/tarball/{latest_tag}"],
+                        stdout=open(tarball_path, "wb"),
+                        check=True
+                    )
 
-                # Extract the tarball
-                subprocess.run(
-                    ["tar", "-xz", "-C", temp_dir, "--strip-components=1", "-f", tarball_path],
-                    check=True
-                )
+                # Extract the tarball with spinner
+                with SpinnerManager.file_operation("📦 Extracting release...") as status:
+                    subprocess.run(
+                        ["tar", "-xz", "-C", temp_dir, "--strip-components=1", "-f", tarball_path],
+                        check=True
+                    )
 
-                # Update commands
+                # Update commands with progress
                 commands_source = os.path.join(temp_dir, ".claude", "commands")
                 if os.path.isdir(commands_source):
-                    self.console.print("🔄 Updating commands...")
+                    # Count files for progress tracking
+                    old_files = list(Path(install_dir).glob("*.md"))
+                    new_files = list(Path(commands_source).glob("*.md"))
+                    total_operations = len(old_files) + len(new_files)
+                    
+                    with track_operation("🔄 Updating commands...", total=total_operations, operation_type="file") as (progress, task):
+                        # Remove old commands
+                        for md_file in old_files:
+                            md_file.unlink()
+                            progress.update(task, advance=1)
 
-                    # Remove old commands
-                    for md_file in Path(install_dir).glob("*.md"):
-                        md_file.unlink()
-
-                    # Copy new commands
-                    for md_file in Path(commands_source).glob("*.md"):
-                        shutil.copy2(md_file, install_dir)
+                        # Copy new commands
+                        for md_file in new_files:
+                            shutil.copy2(md_file, install_dir)
+                            progress.update(task, advance=1)
 
                     self.console.print("✅ Update completed successfully!")
                     self.console.print(f"📦 Updated to: {latest_tag}")

@@ -20,6 +20,7 @@ from rich.syntax import Syntax
 from rich.table import Table
 
 from .base import BaseCommand
+from ..ui import SpinnerManager, create_status_panel, create_info_table
 
 
 class LearnCommand(BaseCommand):
@@ -116,19 +117,18 @@ class LearnCommand(BaseCommand):
         This is a placeholder implementation that demonstrates the structure.
         In a real implementation, this would analyze the actual session context.
         """
-        self.console.print("[cyan]🔍 Analyzing current session context for learnings...[/cyan]")
-        self.console.print()
-        
-        # Get current git repository info for context
-        try:
-            git_root = subprocess.check_output(
-                ["git", "rev-parse", "--show-toplevel"],
-                stderr=subprocess.DEVNULL,
-                text=True
-            ).strip()
-            repo_name = Path(git_root).name
-        except subprocess.CalledProcessError:
-            repo_name = "Current session"
+        # Analyze session context with spinner
+        with SpinnerManager.git_operation("🔍 Analyzing current session context for learnings...") as status:
+            # Get current git repository info for context
+            try:
+                git_root = subprocess.check_output(
+                    ["git", "rev-parse", "--show-toplevel"],
+                    stderr=subprocess.DEVNULL,
+                    text=True
+                ).strip()
+                repo_name = Path(git_root).name
+            except subprocess.CalledProcessError:
+                repo_name = "Current session"
         
         # Sample learning content (in production, this would analyze actual session data)
         learning_content = f"""Session Analysis Results:
@@ -372,21 +372,17 @@ Context: {repo_name}"""
     def _show_integration_summary(self, section: dict, learning_content: str, backup_path: Path) -> None:
         """Show integration summary."""
         self.console.print()
-        self.console.print(Panel.fit(
-            "📊 Integration Summary",
-            style="cyan"
-        ))
         
-        summary_table = Table(show_header=False, box=None)
-        summary_table.add_column("Label", style="cyan")
-        summary_table.add_column("Value", style="white")
-        
-        summary_table.add_row("📁 Target:", section["name"])
-        summary_table.add_row("🕐 Timestamp:", self.timestamp)
-        summary_table.add_row("💾 Backup:", str(backup_path))
-        
+        # Create integration summary data
         preview = learning_content[:50] + "..." if len(learning_content) > 50 else learning_content
-        summary_table.add_row("📝 Content:", preview)
+        summary_data = [
+            ("📁 Target", section["name"]),
+            ("🕐 Timestamp", self.timestamp),
+            ("💾 Backup", str(backup_path)),
+            ("📝 Content Preview", preview),
+        ]
         
+        # Use the new table utility
+        summary_table = create_info_table(summary_data, title="📊 Integration Summary")
         self.console.print(summary_table)
         self.console.print()
