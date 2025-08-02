@@ -1,0 +1,63 @@
+name: Issue Management
+
+on:
+  pull_request:
+    types: [opened, edited, closed]
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  link-checker:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'edited')
+
+    steps:
+      - name: Check for issue links
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || '';
+            const title = context.payload.pull_request.title || '';
+
+            // Check for closing keywords in PR body and title
+            const closingKeywords = /(closes?|fixes?|resolves?)\s+#\d+/gi;
+            const bodyMatches = body.match(closingKeywords) || [];
+            const titleMatches = title.match(closingKeywords) || [];
+
+            const allMatches = [...bodyMatches, ...titleMatches];
+
+            if (allMatches.length === 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: '⚠️ **Missing issue link**\n\nThis PR doesn\'t appear to reference any issues using closing keywords.\n\nConsider adding one of these to your PR description:\n- `Closes #issue_number` - for bug fixes\n- `Fixes #issue_number` - for bug fixes\n- `Resolves #issue_number` - for feature requests\n\nThis helps with automatic issue management when the PR merges.'
+              });
+            } else {
+              console.log(`Found ${allMatches.length} issue references:`, allMatches);
+            }
+
+  stale-issues:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: Mark stale issues
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: |
+            This issue has been automatically marked as stale because it has not had recent activity.
+            It will be closed if no further activity occurs. Thank you for your contributions.
+          stale-pr-message: |
+            This pull request has been automatically marked as stale because it has not had recent activity.
+            It will be closed if no further activity occurs. Thank you for your contributions.
+          days-before-stale: 60
+          days-before-close: 14
+          stale-issue-label: 'stale'
+          stale-pr-label: 'stale'
+          exempt-issue-labels: 'pinned,security,epic'
+          exempt-pr-labels: 'pinned,security'
+
+# Note: Automatic issue closing via keywords is enabled by default in GitHub
+# No additional configuration needed for closes/fixes/resolves functionality

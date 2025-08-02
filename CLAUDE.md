@@ -4,24 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **claude-slash** project that provides custom slash commands for the Claude Code CLI. The project extends Claude Code functionality with session management capabilities, specifically checkpoint and restore features.
+This is a **claude-slash** project that provides custom slash commands for the Claude Code CLI. The project extends Claude Code functionality with a streamlined set of core commands focused on command discovery, learning workflows, and configuration management.
 
 ### Architecture
 
 - **Language**: Bash shell scripting with Node.js tooling
 - **Command Format**: Markdown files with embedded shell scripts (using `!` prefix)
 - **Command Storage**: `.claude/commands/` directory contains command implementations
-- **Session Data**: `.claude/checkpoints/` directory stores session state files
 - **Target Runtime**: Claude Code CLI environment
+- **Update System**: Integrated GitHub release-based update mechanism
 
 ### Key Components
 
-- **Commands**: Located in `.claude/commands/` with both full names and shorthand aliases
-  - `checkpoint.md` / `ckpt.md` - Create session checkpoints
-  - `restore.md` / `rst.md` - Restore from checkpoints
-  - `update.md` / `cr-upgrade.md` - Update command files
+- **Commands**: Located in `.claude/commands/` - streamlined core set
+  - `slash.md` - Main command with help display and update functionality
+  - `learn.md` - Interactive learning and development workflow
+  - `menuconfig.md` - Interactive configuration interface
 - **Scripts**: Build and release automation in `scripts/`
-- **Tests**: Comprehensive test suite in `tests/`
+- **Tests**: Focused test suite in `tests/`
 - **CI/CD**: GitHub Actions workflows in `.github/workflows/`
 
 ## Development Commands
@@ -104,9 +104,9 @@ Detailed description of the command functionality.
 - Store outputs in git repository when possible (`.claude/` directory)
 
 ### Command Naming
-- Use descriptive names with `/project:` prefix
-- Provide shorthand aliases (e.g., `ckpt` for `checkpoint`)
-- Both full and alias commands should be separate files with identical implementation
+- Use descriptive names (no specific prefix requirement after restructuring)
+- Main `/slash` command provides discovery and update functionality
+- Commands integrate subcommand functionality internally (e.g., `/slash update`)
 
 ### Security Requirements
 - Never include dangerous operations (`rm -rf`, `sudo`, etc.)
@@ -152,11 +152,11 @@ git push origin v1.2.0
 
 ## Architecture Notes
 
-### Session Management
-- Checkpoints capture git state, file changes, and session metadata
-- Restore commands can work with latest checkpoint or specific files
-- All session data stored locally in git repository
-- JSON format for structured data with shell-based field extraction
+### Command Discovery and Updates
+- `/slash` command dynamically scans `.claude/commands/` directory for available commands
+- Integrated update system downloads latest commands from GitHub releases
+- Backup and restore functionality for safe updates
+- Color-coded terminal output for better user experience
 
 ### Command Execution
 - Commands are executed in user's local environment
@@ -173,8 +173,8 @@ git push origin v1.2.0
 ## Project Standards
 
 ### Code Quality
-- Comprehensive test coverage (28+ test cases)
-- Markdown and shell script linting
+- Focused test coverage for core command structure
+- Markdown and shell script linting via markdownlint and shellcheck
 - Security scanning in CI pipeline
 - Documentation requirements for all commands
 
@@ -183,3 +183,7 @@ git push origin v1.2.0
 - Comprehensive error handling and user feedback
 - Both interactive and non-interactive modes
 - Consistent command structure and behavior
+
+## Memories
+
+- NEVER include `/project:` in new slash commands
