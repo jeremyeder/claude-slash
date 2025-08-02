@@ -5,7 +5,7 @@
   "scripts": {
     "version": "echo $npm_package_version",
     "bump:patch": "./scripts/bump-version.sh patch",
-    "bump:minor": "./scripts/bump-version.sh minor", 
+    "bump:minor": "./scripts/bump-version.sh minor",
     "bump:major": "./scripts/bump-version.sh major",
     "release:patch": "./scripts/release.sh patch",
     "release:minor": "./scripts/release.sh minor",

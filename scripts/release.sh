@@ -35,7 +35,7 @@ show_usage() {
     echo
     echo "Release types:"
     echo "  major   Major release (1.0.0 -> 2.0.0) - breaking changes"
-    echo "  minor   Minor release (1.0.0 -> 1.1.0) - new features"  
+    echo "  minor   Minor release (1.0.0 -> 1.1.0) - new features"
     echo "  patch   Patch release (1.0.0 -> 1.0.1) - bug fixes"
     echo
     echo "Options:"
@@ -53,13 +53,13 @@ show_usage() {
 # Check prerequisites
 check_prerequisites() {
     print_status "Checking prerequisites..."
-    
+
     # Check if we're in a git repository
     if ! git rev-parse --git-dir > /dev/null 2>&1; then
         print_error "Not in a git repository"
         exit 1
     fi
-    
+
     # Check if we're on main branch
     local current_branch
     current_branch=$(git branch --show-current)
@@ -67,54 +67,54 @@ check_prerequisites() {
         print_error "Must be on main branch for release (currently on: $current_branch)"
         exit 1
     fi
-    
+
     # Check for uncommitted changes
     if ! git diff-index --quiet HEAD --; then
         print_error "You have uncommitted changes. Please commit or stash them first."
         exit 1
     fi
-    
+
     # Check if origin is up to date
     git fetch origin
     local local_commit remote_commit
     local_commit=$(git rev-parse HEAD)
     remote_commit=$(git rev-parse origin/main)
-    
+
     if [ "$local_commit" != "$remote_commit" ]; then
         print_error "Local main branch is not up to date with origin/main"
         print_status "Run: git pull origin main"
         exit 1
     fi
-    
+
     # Check for required tools
     local missing_tools=()
-    
+
     if ! command -v curl &> /dev/null; then
         missing_tools+=("curl")
     fi
-    
+
     if ! command -v git &> /dev/null; then
         missing_tools+=("git")
     fi
-    
+
     if [ ${#missing_tools[@]} -ne 0 ]; then
         print_error "Missing required tools: ${missing_tools[*]}"
         exit 1
     fi
-    
+
     print_success "Prerequisites check passed"
 }
 
 # Run tests
 run_tests() {
     print_status "Running tests..."
-    
+
     # Check if test directory exists
     if [ ! -d "tests" ]; then
         print_warning "No tests directory found, skipping tests"
         return
     fi
-    
+
     # Run all test scripts
     local test_failed=false
     for test_file in tests/*.sh; do
@@ -126,19 +126,19 @@ run_tests() {
             fi
         fi
     done
-    
+
     if [ "$test_failed" = true ]; then
         print_error "Some tests failed. Fix them before releasing."
         exit 1
     fi
-    
+
     print_success "All tests passed"
 }
 
 # Run linting
 run_linting() {
     print_status "Running linting checks..."
-    
+
     # Check markdown files if markdownlint is available
     if command -v markdownlint &> /dev/null; then
         print_status "Linting markdown files..."
@@ -146,22 +146,22 @@ run_linting() {
             print_warning "Markdown linting issues found"
         fi
     fi
-    
+
     # Check shell scripts if shellcheck is available
     if command -v shellcheck &> /dev/null; then
         print_status "Linting shell scripts..."
-        
+
         # Lint main scripts
         if ! shellcheck install.sh scripts/*.sh; then
             print_error "Shell script linting failed"
             exit 1
         fi
-        
+
         # Lint test scripts
         if [ -d "tests" ]; then
             find tests -name "*.sh" -exec shellcheck {} \;
         fi
-        
+
         print_success "Shell script linting passed"
     else
         print_warning "shellcheck not found, skipping shell script linting"
@@ -171,15 +171,15 @@ run_linting() {
 # Generate changelog
 generate_changelog() {
     local new_version="$1"
-    
+
     print_status "Generating changelog for $new_version..."
-    
+
     # Get commits since last tag
     local last_tag
     last_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-    
+
     local changelog_file="CHANGELOG-$new_version.md"
-    
+
     if [ -n "$last_tag" ]; then
         print_status "Generating changelog since $last_tag..."
         git log --pretty=format:"- %s" "$last_tag"..HEAD > "$changelog_file"
@@ -187,7 +187,7 @@ generate_changelog() {
         print_status "Generating changelog for initial release..."
         git log --pretty=format:"- %s" > "$changelog_file"
     fi
-    
+
     print_success "Changelog generated: $changelog_file"
 }
 
@@ -197,7 +197,7 @@ main() {
     local skip_tests=false
     local dry_run=false
     local auto_yes=false
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -232,27 +232,27 @@ main() {
                 ;;
         esac
     done
-    
+
     # Validate arguments
     if [ -z "$release_type" ]; then
         print_error "Release type required (major, minor, or patch)"
         show_usage
         exit 1
     fi
-    
+
     echo "🚀 claude-slash Release Process"
     echo "==============================="
     echo
-    
+
     # Get current version for preview
     local current_version
     current_version=$(git tag --sort=-version:refname | head -1 2>/dev/null || echo "v0.0.0")
-    
+
     # Calculate new version using bump script logic
     local new_version
     local major minor patch
     read -r major minor patch <<< "$(echo "${current_version#v}" | tr '.' ' ')"
-    
+
     case "$release_type" in
         major)
             major=$((major + 1))
@@ -267,20 +267,20 @@ main() {
             patch=$((patch + 1))
             ;;
     esac
-    
+
     new_version="v$major.$minor.$patch"
-    
+
     print_status "Current version: $current_version"
     print_status "New version: $new_version"
     print_status "Release type: $release_type"
     echo
-    
+
     if [ "$dry_run" = true ]; then
         print_warning "DRY RUN - No changes will be made"
         print_status "Would perform full release process for $new_version"
         exit 0
     fi
-    
+
     # Confirm the release
     echo "This will perform a complete release process:"
     echo "  • Check prerequisites and environment"
@@ -293,7 +293,7 @@ main() {
     echo "  • Create and push git tag"
     echo "  • Trigger GitHub Actions release"
     echo
-    
+
     if [ "$auto_yes" != true ]; then
         read -p "Continue with $release_type release? (y/N): " -n 1 -r
         echo
@@ -304,16 +304,16 @@ main() {
     else
         print_status "Auto-confirmed: Proceeding with $release_type release"
     fi
-    
+
     # Execute release steps
     echo
     print_status "🔍 Step 1: Checking prerequisites..."
     check_prerequisites
-    
+
     echo
     print_status "🧹 Step 2: Running linting checks..."
     run_linting
-    
+
     if [ "$skip_tests" != true ]; then
         echo
         print_status "🧪 Step 3: Running tests..."
@@ -321,11 +321,11 @@ main() {
     else
         print_warning "⚠️  Step 3: Skipping tests (--skip-tests specified)"
     fi
-    
+
     echo
     print_status "📝 Step 4: Generating changelog..."
     generate_changelog "$new_version"
-    
+
     echo
     print_status "🔖 Step 5: Bumping version and creating tag..."
     local bump_args=("$release_type" "--push")
@@ -336,7 +336,7 @@ main() {
         print_error "Version bump failed"
         exit 1
     fi
-    
+
     echo
     print_success "🎉 Release $new_version completed successfully!"
     echo
@@ -348,7 +348,7 @@ main() {
     print_status "Monitor the release at:"
     echo "  https://github.com/jeremyeder/claude-slash/actions"
     echo "  https://github.com/jeremyeder/claude-slash/releases"
-    
+
     # Clean up changelog file
     rm -f "CHANGELOG-$new_version.md"
 }

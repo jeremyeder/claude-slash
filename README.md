@@ -6,7 +6,7 @@ Custom slash commands for Claude Code CLI. Save and restore your coding sessions
 
 - **📋 `/slash`** - Display all available commands with descriptions
 - **💾 `/checkpoint`** - Save session state for future restoration
-- **🔄 `/restore`** - Restore session from checkpoint file  
+- **🔄 `/restore`** - Restore session from checkpoint file
 - **🧠 `/learn`** - Extract and integrate learnings into CLAUDE.md
 - **⬆️ `/update`** - Update commands to latest version
 - **🚀 `/bootstrap`** - Bootstrap claude-slash installation

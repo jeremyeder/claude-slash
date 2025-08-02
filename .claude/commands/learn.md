@@ -171,7 +171,7 @@ integration points while maintaining full user control over the process.
 !    rm -f "$sections_file"
 !    exit 1
 !  fi
-!  
+!
 !  target_section="## $new_section_name"
 !  integration_mode="new_section"
 !  echo -e "${GREEN}✅ Will create new section: $target_section${NC}"
@@ -216,7 +216,7 @@ integration points while maintaining full user control over the process.
 !  echo "$formatted_learning" | sed 's/^/+ /' | sed "s/^+ /${GREEN}+ ${NC}/"
 !else
 !  echo -e "${BLUE}Existing section: $target_section${NC}"
-!  
+!
 !  if [ "$integration_type" = "manual" ]; then
 !    echo ""
 !    echo -e "${YELLOW}📖 Current section content:${NC}"
@@ -231,7 +231,7 @@ integration points while maintaining full user control over the process.
 !    rm -f "$sections_file"
 !    exit 0
 !  fi
-!  
+!
 !  echo ""
 !  echo -e "${GREEN}Learning content will be ${integration_type}ed:${NC}"
 !  echo "$formatted_learning" | sed 's/^/+ /' | sed "s/^+ /${GREEN}+ ${NC}/"

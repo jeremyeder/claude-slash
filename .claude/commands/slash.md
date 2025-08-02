@@ -49,20 +49,20 @@ This command displays a comprehensive list of all available claude-slash command
 !extract_description() {
 !  local file="$1"
 !  local description=""
-!  
+!
 !  # Try to get the first line after the title that contains descriptive text
 !  description=$(sed -n '3p' "$file" | sed 's/^[[:space:]]*//')
-!  
+!
 !  # If that's empty or too short, look for the Description section
 !  if [ -z "$description" ] || [ ${#description} -lt 10 ]; then
 !    description=$(sed -n '/^## Description/,/^##/p' "$file" | sed -n '2p' | sed 's/^[[:space:]]*//' | head -c 80)
 !  fi
-!  
+!
 !  # Fallback to a generic description if still empty
 !  if [ -z "$description" ]; then
 !    description="Custom claude-slash command"
 !  fi
-!  
+!
 !  echo "$description"
 !}
 
@@ -70,15 +70,15 @@ This command displays a comprehensive list of all available claude-slash command
 !extract_usage() {
 !  local file="$1"
 !  local usage=""
-!  
+!
 !  # Look for usage in code blocks
 !  usage=$(sed -n '/^```bash/,/^```/p' "$file" | sed -n '2p' | sed 's/^[[:space:]]*//')
-!  
+!
 !  # If not found, try without bash specifier
 !  if [ -z "$usage" ]; then
 !    usage=$(sed -n '/^```/,/^```/p' "$file" | sed -n '2p' | sed 's/^[[:space:]]*//')
 !  fi
-!  
+!
 !  echo "$usage"
 !}
 
@@ -89,27 +89,27 @@ This command displays a comprehensive list of all available claude-slash command
 !for cmd_file in "$commands_dir"/*.md; do
 !  if [ -f "$cmd_file" ]; then
 !    filename=$(basename "$cmd_file" .md)
-!    
+!
 !    # Skip this help command to avoid recursion
 !    if [ "$filename" = "slash" ]; then
 !      continue
 !    fi
-!    
+!
 !    description=$(extract_description "$cmd_file")
 !    usage=$(extract_usage "$cmd_file")
-!    
+!
 !    # Format the command name
 !    if [ -n "$usage" ]; then
 !      cmd_display="$usage"
 !    else
 !      cmd_display="/$filename"
 !    fi
-!    
+!
 !    # Truncate description if too long
 !    if [ ${#description} -gt 60 ]; then
 !      description="${description:0:57}..."
 !    fi
-!    
+!
 !    echo -e "${CYAN}$cmd_display${NC} | $description"
 !  fi
 !done

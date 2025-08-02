@@ -69,13 +69,13 @@ Features:
 !        echo "Creating Python virtual environment for menuconfig with uv..."
 !        uv venv "$venv_dir"
 !    fi
-!    
+!
 !    # Check if textual is installed
 !    if ! "$venv_dir/bin/python" -c "import textual" 2>/dev/null; then
 !        echo "Installing textual using uv..."
 !        uv pip install --python "$venv_dir/bin/python" textual
 !    fi
-!    
+!
 !    python_exe="$venv_dir/bin/python"
 !else
 !    # Fallback to traditional pip
@@ -83,14 +83,14 @@ Features:
 !        echo "Creating Python virtual environment for menuconfig..."
 !        python3 -m venv "$venv_dir"
 !    fi
-!    
+!
 !    source "$venv_dir/bin/activate"
-!    
+!
 !    if ! python -c "import textual" 2>/dev/null; then
 !        echo "Installing textual using pip..."
 !        pip install textual
 !    fi
-!    
+!
 !    python_exe="python"
 !fi
 !

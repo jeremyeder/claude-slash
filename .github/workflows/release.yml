@@ -8,10 +8,10 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Validate tag format
       run: |
         echo "Validating tag: ${{ github.ref_name }}"
@@ -20,7 +20,7 @@ jobs:
           exit 1
         fi
         echo "✅ Tag format is valid"
-    
+
     - name: Extract release info
       id: release_info
       run: |
@@ -30,15 +30,15 @@ jobs:
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Release tag: $TAG_NAME"
         echo "Version: $VERSION"
-    
+
     - name: Update VERSION file for consistency
       run: |
         echo "Ensuring VERSION file matches tag..."
         echo "${{ steps.release_info.outputs.version }}" > VERSION
-        
+
         # Also update install.sh version
         sed -i "s/INSTALLER_VERSION=\"[^\"]*\"/INSTALLER_VERSION=\"${{ steps.release_info.outputs.version }}\"/" install.sh
-        
+
         # Check if files were actually changed
         if git diff --quiet; then
           echo "No changes needed - files already in sync"
@@ -49,18 +49,18 @@ jobs:
           git add VERSION install.sh
           git commit -m "Sync VERSION file with release tag ${{ steps.release_info.outputs.tag_name }}
 
-🤖 Generated with [Claude Code](https://claude.ai/code)
+          🤖 Generated with [Claude Code](https://claude.ai/code)
 
-Co-Authored-By: Claude <noreply@anthropic.com>"
+          Co-Authored-By: Claude <noreply@anthropic.com>"
           git push origin HEAD:main
         fi
-    
+
     - name: Generate release notes
       id: release_notes
       run: |
         # Get commits since last tag
         LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-        
+
         if [ -n "$LAST_TAG" ]; then
           echo "Generating changelog since $LAST_TAG..."
           CHANGELOG=$(git log --pretty=format:"- %s" $LAST_TAG..HEAD)
@@ -68,39 +68,39 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
           echo "Generating changelog for initial release..."
           CHANGELOG=$(git log --pretty=format:"- %s")
         fi
-        
+
         # Create release notes
         cat > release_notes.md << EOF
         ## claude-slash ${{ steps.release_info.outputs.version }}
-        
+
         ### Changes
         $CHANGELOG
-        
+
         ### Installation
-        
+
         \`\`\`bash
         # Fresh installation
         curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash
-        
+
         # Update existing installation
         /project:update
         # or
         curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash -s -- --update
         \`\`\`
-        
+
         ### Available Commands
         - \`/project:checkpoint\` - Create session checkpoints
         - \`/project:ckpt\` - Shorthand for checkpoint
         - \`/project:update\` - Update to latest release
         - \`/project:up\` - Shorthand for update
-        
+
         ---
-        
+
         **Full Changelog**: https://github.com/jeremyeder/claude-slash/compare/$LAST_TAG...${{ steps.release_info.outputs.tag_name }}
         EOF
-        
+
         echo "Release notes generated"
-    
+
     - name: Create GitHub Release
       uses: actions/create-release@v1
       env:
@@ -111,20 +111,20 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
         body_path: release_notes.md
         draft: false
         prerelease: false
-    
+
     - name: Package command files
       run: |
         echo "📦 Packaging command files..."
         mkdir -p release-assets
-        
+
         # Create a tarball of just the command files
         tar -czf release-assets/claude-slash-commands-${{ steps.release_info.outputs.version }}.tar.gz .claude/commands/
-        
+
         # Create a zip file as well
         (cd .claude && zip -r ../release-assets/claude-slash-commands-${{ steps.release_info.outputs.version }}.zip commands/)
-        
+
         ls -la release-assets/
-    
+
     - name: Upload Release Assets
       uses: actions/upload-release-asset@v1
       env:
@@ -134,7 +134,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
         asset_path: release-assets/claude-slash-commands-${{ steps.release_info.outputs.version }}.tar.gz
         asset_name: claude-slash-commands-${{ steps.release_info.outputs.version }}.tar.gz
         asset_content_type: application/gzip
-    
+
     - name: Upload ZIP Asset
       uses: actions/upload-release-asset@v1
       env:
@@ -144,7 +144,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
         asset_path: release-assets/claude-slash-commands-${{ steps.release_info.outputs.version }}.zip
         asset_name: claude-slash-commands-${{ steps.release_info.outputs.version }}.zip
         asset_content_type: application/zip
-    
+
     - name: Validate release
       run: |
         echo "✅ Release ${{ steps.release_info.outputs.tag_name }} created successfully!"

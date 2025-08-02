@@ -3,7 +3,7 @@ name: Auto Version Bump
 on:
   push:
     branches: [ main ]
-  
+
   # Allow manual triggering
   workflow_dispatch:
     inputs:
@@ -22,26 +22,26 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Allow pushing commits and tags
-    
+
     # Only run on commits that don't already bump version
     if: "!contains(github.event.head_commit.message, 'Bump version to')"
-    
+
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
-    
+
     - name: Configure Git
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-    
+
     - name: Determine version bump type
       id: version_type
       run: |
         VERSION_TYPE="patch"
-        
+
         # Check for manual trigger
         if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
           VERSION_TYPE="${{ github.event.inputs.version_type }}"
@@ -49,16 +49,16 @@ jobs:
         else
           # Auto-detect from commit messages since last tag
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          
+
           if [ -n "$LAST_TAG" ]; then
             COMMITS_SINCE_TAG=$(git log --oneline $LAST_TAG..HEAD)
           else
             COMMITS_SINCE_TAG=$(git log --oneline)
           fi
-          
+
           echo "Commits since last tag:"
           echo "$COMMITS_SINCE_TAG"
-          
+
           # Check for breaking changes or major features
           if echo "$COMMITS_SINCE_TAG" | grep -i -E "(BREAKING|breaking change|major:|!:)" > /dev/null; then
             VERSION_TYPE="major"
@@ -75,20 +75,20 @@ jobs:
             exit 0
           fi
         fi
-        
+
         echo "version_type=$VERSION_TYPE" >> $GITHUB_OUTPUT
         echo "Final version type: $VERSION_TYPE"
-    
+
     - name: Skip if no bump needed
       if: steps.version_type.outputs.skip_bump == 'true'
       run: |
         echo "No version bump needed based on commit messages"
         exit 0
-    
+
     - name: Make scripts executable
       if: steps.version_type.outputs.skip_bump != 'true'
       run: chmod +x scripts/*.sh
-    
+
     - name: Bump version
       if: steps.version_type.outputs.skip_bump != 'true'
       run: |
@@ -96,7 +96,7 @@ jobs:
         ./scripts/bump-version.sh ${{ steps.version_type.outputs.version_type }} --push --yes
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
+
     - name: Get new version
       if: steps.version_type.outputs.skip_bump != 'true'
       id: new_version
@@ -104,7 +104,7 @@ jobs:
         NEW_VERSION=$(git describe --tags --abbrev=0)
         echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
         echo "New version: $NEW_VERSION"
-    
+
     - name: Summary
       if: steps.version_type.outputs.skip_bump != 'true'
       run: |
