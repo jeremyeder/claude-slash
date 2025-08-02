@@ -12,7 +12,8 @@ Initialize an empty directory with complete GitHub repository infrastructure, in
 
 The bootstrap command provides a comprehensive repository initialization solution that sets up a complete modern development environment. It handles all the essential infrastructure components needed for a professional GitHub repository.
 
-**Core Features:**
+### Core Features
+
 1. **Git initialization** - Creates local repository with safety checks
 2. **GitHub repository creation** - Sets up remote repository using GitHub CLI
 3. **GitHub Actions workflows** - Configures linting pipelines for Python, Markdown, and Shell scripts
@@ -22,7 +23,8 @@ The bootstrap command provides a comprehensive repository initialization solutio
 7. **MIT License** - Auto-generates license with current year and user information
 8. **Dependabot** - Configures automated dependency updates for multiple ecosystems
 
-**Additional Infrastructure:**
+### Additional Infrastructure
+
 - Comprehensive .gitignore for Python, Node.js, and development environments
 - EditorConfig for consistent coding standards
 - Security scanning workflows
@@ -120,78 +122,78 @@ The command is **fully idempotent** - safe to run multiple times without overwri
 !# Linting workflow
 !lint_workflow='.github/workflows/lint.yml'
 !safe_create_file "$lint_workflow" 'name: Lint
-
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
-
-jobs:
-  python-lint:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.x"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 black isort
-        if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
-    - name: Lint with flake8
-      run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Check formatting with black
-      run: black --check .
-    - name: Check import sorting with isort
-      run: isort --check-only .
-
-  markdown-lint:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Lint Markdown files
-      uses: DavidAnson/markdownlint-cli2-action@v13
-      with:
-        globs: "**/*.md"
-
-  shell-lint:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Run ShellCheck
-      uses: ludeeus/action-shellcheck@master
-      with:
-        scandir: "./scripts"
-        severity: warning'
+!
+!on:
+!  push:
+!    branches: [ main, develop ]
+!  pull_request:
+!    branches: [ main, develop ]
+!
+!jobs:
+!  python-lint:
+!    runs-on: ubuntu-latest
+!    steps:
+!    - uses: actions/checkout@v4
+!    - name: Set up Python
+!      uses: actions/setup-python@v4
+!      with:
+!        python-version: "3.x"
+!    - name: Install dependencies
+!      run: |
+!        python -m pip install --upgrade pip
+!        pip install flake8 black isort
+!        if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+!    - name: Lint with flake8
+!      run: |
+!        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+!        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+!    - name: Check formatting with black
+!      run: black --check .
+!    - name: Check import sorting with isort
+!      run: isort --check-only .
+!
+!  markdown-lint:
+!    runs-on: ubuntu-latest
+!    steps:
+!    - uses: actions/checkout@v4
+!    - name: Lint Markdown files
+!      uses: DavidAnson/markdownlint-cli2-action@v13
+!      with:
+!        globs: "**/*.md"
+!
+!  shell-lint:
+!    runs-on: ubuntu-latest
+!    steps:
+!    - uses: actions/checkout@v4
+!    - name: Run ShellCheck
+!      uses: ludeeus/action-shellcheck@master
+!      with:
+!        scandir: "./scripts"
+!        severity: warning'
 
 !# Security scanning workflow  
 !security_workflow='.github/workflows/security.yml'
 !safe_create_file "$security_workflow" 'name: Security Scan
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  schedule:
-    - cron: "0 2 * * 1"  # Weekly on Mondays
-
-jobs:
-  security:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Run Super Linter
-      uses: github/super-linter@v4
-      env:
-        DEFAULT_BRANCH: main
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        VALIDATE_ALL_CODEBASE: false'
+!
+!on:
+!  push:
+!    branches: [ main ]
+!  pull_request:
+!    branches: [ main ]
+!  schedule:
+!    - cron: "0 2 * * 1"  # Weekly on Mondays
+!
+!jobs:
+!  security:
+!    runs-on: ubuntu-latest
+!    steps:
+!    - uses: actions/checkout@v4
+!    - name: Run Super Linter
+!      uses: github/super-linter@v4
+!      env:
+!        DEFAULT_BRANCH: main
+!        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+!        VALIDATE_ALL_CODEBASE: false'
 
 !echo ""
 
@@ -384,68 +386,68 @@ SOFTWARE."
 !echo -e "${BLUE}8. Setting up Dependabot configuration...${NC}"
 !dependabot_config='.github/dependabot.yml'
 !safe_create_file "$dependabot_config" 'version: 2
-updates:
-  # Python dependencies
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 10
-    labels:
-      - "dependencies"
-      - "python"
-    commit-message:
-      prefix: "deps"
-      prefix-development: "dev-deps"
-      include: "scope"
-
-  # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "github-actions"
-    commit-message:
-      prefix: "ci"
-      include: "scope"
-
-  # Docker (if Dockerfile exists)
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "docker"
-    commit-message:
-      prefix: "docker"
-      include: "scope"
-
-  # NPM (if package.json exists)
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 10
-    labels:
-      - "dependencies"
-      - "javascript"
-    commit-message:
-      prefix: "deps"
-      prefix-development: "dev-deps"
-      include: "scope"'
+!updates:
+!  # Python dependencies
+!  - package-ecosystem: "pip"
+!    directory: "/"
+!    schedule:
+!      interval: "weekly"
+!      day: "monday"
+!      time: "09:00"
+!    open-pull-requests-limit: 10
+!    labels:
+!      - "dependencies"
+!      - "python"
+!    commit-message:
+!      prefix: "deps"
+!      prefix-development: "dev-deps"
+!      include: "scope"
+!
+!  # GitHub Actions
+!  - package-ecosystem: "github-actions"
+!    directory: "/"
+!    schedule:
+!      interval: "weekly"
+!      day: "monday"
+!      time: "09:00"
+!    open-pull-requests-limit: 5
+!    labels:
+!      - "dependencies"
+!      - "github-actions"
+!    commit-message:
+!      prefix: "ci"
+!      include: "scope"
+!
+!  # Docker (if Dockerfile exists)
+!  - package-ecosystem: "docker"
+!    directory: "/"
+!    schedule:
+!      interval: "weekly"
+!      day: "monday"
+!      time: "09:00"
+!    open-pull-requests-limit: 5
+!    labels:
+!      - "dependencies"
+!      - "docker"
+!    commit-message:
+!      prefix: "docker"
+!      include: "scope"
+!
+!  # NPM (if package.json exists)
+!  - package-ecosystem: "npm"
+!    directory: "/"
+!    schedule:
+!      interval: "weekly"
+!      day: "monday"
+!      time: "09:00"
+!    open-pull-requests-limit: 10
+!    labels:
+!      - "dependencies"
+!      - "javascript"
+!    commit-message:
+!      prefix: "deps"
+!      prefix-development: "dev-deps"
+!      include: "scope"'
 
 !echo ""
 
