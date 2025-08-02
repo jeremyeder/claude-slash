@@ -227,48 +227,16 @@ The command is **fully idempotent** - safe to run multiple times without overwri
 !safe_create_dir "scripts"
 
 !# Create initial Python files
-!echo "# $project_name package" > "src/__init__.py"
+!printf '# %s package\n' "$project_name" > "src/__init__.py"
 !echo -e "${GREEN}✅ Created src/__init__.py${NC}"
 
-!cat > "src/main.py" << 'EOF'
-#!/usr/bin/env python3
-"""
-Main module for $project_name.
-"""
-
-def main():
-    """Main entry point."""
-    print("Hello from $project_name!")
-
-if __name__ == "__main__":
-    main()
-EOF
+!printf '#!/usr/bin/env python3\n"""\nMain module for %s.\n"""\n\ndef main():\n    """Main entry point."""\n    print("Hello from %s!")\n\nif __name__ == "__main__":\n    main()\n' "$project_name" "$project_name" > "src/main.py"
 !echo -e "${GREEN}✅ Created src/main.py${NC}"
 
 !touch "tests/__init__.py"
 !echo -e "${GREEN}✅ Created tests/__init__.py${NC}"
 
-!cat > "tests/test_main.py" << 'EOF'
-#!/usr/bin/env python3
-"""
-Tests for main module.
-"""
-import unittest
-from src.main import main
-
-class TestMain(unittest.TestCase):
-    """Test cases for main module."""
-    
-    def test_main_runs(self):
-        """Test that main function runs without error."""
-        try:
-            main()
-        except Exception as e:
-            self.fail(f"main() raised {e} unexpectedly!")
-
-if __name__ == "__main__":
-    unittest.main()
-EOF
+!printf '#!/usr/bin/env python3\n"""\nTests for main module.\n"""\nimport unittest\nfrom src.main import main\n\nclass TestMain(unittest.TestCase):\n    """Test cases for main module."""\n    \n    def test_main_runs(self):\n        """Test that main function runs without error."""\n        try:\n            main()\n        except Exception as e:\n            self.fail(f"main() raised {e} unexpectedly!")\n\nif __name__ == "__main__":\n    unittest.main()\n' > "tests/test_main.py"
 !echo -e "${GREEN}✅ Created tests/test_main.py${NC}"
 
 !echo ""
@@ -651,20 +619,10 @@ trim_trailing_whitespace = false"
 !echo -e "${GREEN}✅ Created CONTRIBUTING.md${NC}"
 
 !# Python requirements files
-!cat > requirements.txt << 'EOF'
-# Production dependencies
-# Add your project dependencies here
-EOF
+!printf '# Production dependencies\n# Add your project dependencies here\n' > requirements.txt
 !echo -e "${GREEN}✅ Created requirements.txt${NC}"
 
-!cat > requirements-dev.txt << 'EOF'
-# Development dependencies
-flake8>=5.0.0
-black>=22.0.0
-isort>=5.10.0
-pytest>=7.0.0
-pytest-cov>=4.0.0
-EOF
+!printf '# Development dependencies\nflake8>=5.0.0\nblack>=22.0.0\nisort>=5.10.0\npytest>=7.0.0\npytest-cov>=4.0.0\n' > requirements-dev.txt
 !echo -e "${GREEN}✅ Created requirements-dev.txt${NC}"
 
 !echo ""
