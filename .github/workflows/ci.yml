@@ -17,7 +17,21 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
+    - name: Cache npm global packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-global-${{ hashFiles('**/package.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-global-
 
+    - name: Cache apt packages
+      uses: actions/cache@v4
+      with:
+        path: /var/cache/apt/archives
+        key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/ci.yml') }}
+        restore-keys: |
+          ${{ runner.os }}-apt-
     - name: Install linting tools
       run: |
         # Install markdownlint
