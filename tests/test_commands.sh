@@ -37,10 +37,10 @@ test_fail() {
 test_command_files_exist() {
     test_start "Command files exist"
 
-    if [ -f ".claude/commands/slash.md" ] && [ -f ".claude/commands/learn.md" ] && [ -f ".claude/commands/cr-bootstrap.md" ] && [ -f ".claude/commands/bootstrap.md" ] && [ -f ".claude/commands/menuconfig.md" ] && [ -f ".claude/commands/mcfg.md" ] && [ -f ".claude/commands/update.md" ] && [ -f ".claude/commands/cr-upgrade.md" ]; then
-        test_pass "All command files found"
+    if [ -f ".claude/commands/slash.md" ] && [ -f ".claude/commands/learn.md" ] && [ -f ".claude/commands/menuconfig.md" ]; then
+        test_pass "All core command files found"
     else
-        test_fail "Missing command files"
+        test_fail "Missing core command files"
     fi
 }
 
@@ -106,83 +106,6 @@ test_install_script() {
     fi
 }
 
-# Test bootstrap command functionality
-test_bootstrap_functionality() {
-    test_start "Bootstrap command functionality"
-
-    # Test cr-bootstrap command structure
-    if [ -f ".claude/commands/cr-bootstrap.md" ]; then
-        if grep -q "Bootstrap claude-slash installation" ".claude/commands/cr-bootstrap.md"; then
-            test_pass "cr-bootstrap.md has proper description"
-        else
-            test_fail "cr-bootstrap.md missing proper description"
-        fi
-
-        # Test argument parsing
-        if grep -q "for arg in \$ARGUMENTS" ".claude/commands/cr-bootstrap.md"; then
-            test_pass "cr-bootstrap.md has argument parsing"
-        else
-            test_fail "cr-bootstrap.md missing argument parsing"
-        fi
-
-        # Test installation options
-        if grep -q -- "--global" ".claude/commands/cr-bootstrap.md" && grep -q -- "--force" ".claude/commands/cr-bootstrap.md"; then
-            test_pass "cr-bootstrap.md has installation options"
-        else
-            test_fail "cr-bootstrap.md missing installation options"
-        fi
-    else
-        test_fail "cr-bootstrap.md not found"
-    fi
-}
-
-# Test bootstrap command alias
-test_bootstrap_alias() {
-    test_start "Bootstrap command alias"
-
-    if [ -f ".claude/commands/bootstrap.md" ]; then
-        if grep -q "This is an alias for the full" ".claude/commands/bootstrap.md"; then
-            test_pass "bootstrap.md has proper alias documentation"
-        else
-            test_fail "bootstrap.md missing alias documentation"
-        fi
-
-        # Test that alias has same core functionality
-        if grep -q "install_global=false" ".claude/commands/bootstrap.md"; then
-            test_pass "bootstrap.md has same core logic"
-        else
-            test_fail "bootstrap.md missing core logic"
-        fi
-    else
-        test_fail "bootstrap.md not found"
-    fi
-}
-
-# Test bootstrap command validation
-test_bootstrap_validation() {
-    test_start "Bootstrap command validation"
-
-    # Test directory creation logic
-    if grep -q "mkdir -p.*checkpoints" ".claude/commands/cr-bootstrap.md"; then
-        test_pass "cr-bootstrap creates checkpoints directory"
-    else
-        test_fail "cr-bootstrap missing checkpoints directory creation"
-    fi
-
-    # Test GitHub API usage
-    if grep -q "api.github.com/repos" ".claude/commands/cr-bootstrap.md"; then
-        test_pass "cr-bootstrap uses GitHub API"
-    else
-        test_fail "cr-bootstrap missing GitHub API usage"
-    fi
-
-    # Test validation step
-    if grep -q "Validating installation" ".claude/commands/cr-bootstrap.md"; then
-        test_pass "cr-bootstrap includes validation step"
-    else
-        test_fail "cr-bootstrap missing validation step"
-    fi
-}
 
 # Test menuconfig functionality
 test_menuconfig_functionality() {
@@ -228,42 +151,28 @@ test_menuconfig_functionality() {
     fi
 }
 
-# Test menuconfig alias
-test_menuconfig_alias() {
-    test_start "Menuconfig alias functionality"
-
-    if [ -f ".claude/commands/mcfg.md" ] && [ -f ".claude/commands/menuconfig.md" ]; then
-        # Check that both files reference the same Python script
-        if grep -q "claude_menuconfig.py" ".claude/commands/mcfg.md" && \
-           grep -q "claude_menuconfig.py" ".claude/commands/menuconfig.md"; then
-            test_pass "Menuconfig alias references same script"
-        else
-            test_fail "Menuconfig alias missing script reference"
-        fi
-
-        # Check that alias has proper description
-        if grep -q "Short alias" ".claude/commands/mcfg.md"; then
-            test_pass "Menuconfig alias has proper description"
-        else
-            test_fail "Menuconfig alias missing alias description"
-        fi
-    else
-        test_fail "Cannot compare menuconfig alias files"
-    fi
-}
 
 # Test slash command functionality
 test_slash_command() {
     test_start "Slash command functionality"
 
     if [ -f ".claude/commands/slash.md" ]; then
-        # Check for proper structure
-        if grep -q "Display all available custom slash commands" ".claude/commands/slash.md" && \
+        # Check for proper structure and subcommand support
+        if grep -q "Main claude-slash command" ".claude/commands/slash.md" && \
            grep -q "/slash" ".claude/commands/slash.md" && \
-           grep -q "extract_description" ".claude/commands/slash.md"; then
-            test_pass "Slash command has proper content and functionality"
+           grep -q "extract_description" ".claude/commands/slash.md" && \
+           grep -q "subcommand=" ".claude/commands/slash.md"; then
+            test_pass "Slash command has proper content and subcommand functionality"
         else
             test_fail "Slash command missing key functionality"
+        fi
+
+        # Check if it includes update functionality
+        if grep -q "update" ".claude/commands/slash.md" && \
+           grep -q "Updating claude-slash commands" ".claude/commands/slash.md"; then
+            test_pass "Slash command includes update functionality"
+        else
+            test_fail "Slash command missing update functionality"
         fi
 
         # Check if it references command scanning
@@ -272,6 +181,13 @@ test_slash_command() {
             test_pass "Slash command includes dynamic command scanning"
         else
             test_fail "Slash command missing dynamic scanning functionality"
+        fi
+
+        # Check for direct terminal output mode
+        if grep -q "CLAUDE_OUTPUT_MODE: DIRECT_TERMINAL" ".claude/commands/slash.md"; then
+            test_pass "Slash command has direct terminal output mode"
+        else
+            test_fail "Slash command missing direct terminal output mode"
         fi
     else
         test_fail "Slash command file not found"
@@ -292,12 +208,8 @@ main() {
     test_command_structure
     test_shell_syntax
     test_slash_command
-    test_bootstrap_functionality
-    test_bootstrap_alias
-    test_bootstrap_validation
     test_install_script
     test_menuconfig_functionality
-    test_menuconfig_alias
 
     # Summary
     echo

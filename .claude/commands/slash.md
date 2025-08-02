@@ -1,22 +1,35 @@
-# Slash Commands Help
+# Slash Commands
 
-Display all available custom slash commands with descriptions and usage.
+Main claude-slash command with help display and update functionality.
 
 ## Usage
 
 ```bash
-/slash
+/slash                # Show help and available commands
+/slash help           # Show help and available commands
+/slash update         # Update commands to latest release
 ```
 
 ## Description
 
-This command displays a comprehensive list of all available claude-slash commands with their descriptions and usage examples. It dynamically scans the `.claude/commands/` directory to provide up-to-date information about installed commands.
+This is the main claude-slash command that provides:
+
+- **Help Mode**: Display all available commands with descriptions and usage examples
+- **Update Mode**: Update your local claude-slash commands to the latest release from GitHub
+
+The help mode dynamically scans the `.claude/commands/` directory to provide up-to-date information about installed commands.
 
 ## Implementation
 
 !# CLAUDE_OUTPUT_MODE: DIRECT_TERMINAL
 !# This command should output directly to terminal without Claude parsing or interpretation
 !
+!# Parse arguments for subcommand support
+!subcommand="${ARGUMENTS%% *}"  # Get first argument
+!if [ -z "$subcommand" ]; then
+!    subcommand="help"
+!fi
+
 !# Color definitions for better UX
 !RED='\033[0;31m'
 !GREEN='\033[0;32m'
@@ -26,6 +39,99 @@ This command displays a comprehensive list of all available claude-slash command
 !CYAN='\033[0;36m'
 !NC='\033[0m' # No Color
 
+!# Handle update subcommand
+!if [ "$subcommand" = "update" ]; then
+!    echo "🔄 Updating claude-slash commands..."
+!    echo
+!
+!    # Determine installation location
+!    install_dir=""
+!    install_type=""
+!
+!    if [ -d ".claude/commands" ]; then
+!        install_dir=".claude/commands"
+!        install_type="project"
+!    elif [ -d "$HOME/.claude/commands" ]; then
+!        install_dir="$HOME/.claude/commands"
+!        install_type="global"
+!    else
+!        echo "❌ No claude-slash installation found"
+!        echo "Run the installer first:"
+!        echo "curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh -o install.sh && bash install.sh"
+!        exit 1
+!    fi
+!
+!    echo "📍 Found $install_type installation at: $install_dir"
+!
+!    # Check for latest release
+!    echo "🔍 Checking latest release..."
+!    latest_info=$(curl -s "https://api.github.com/repos/jeremyeder/claude-slash/releases/latest")
+!    if [ $? -ne 0 ]; then
+!        echo "❌ Failed to check for updates (network error)"
+!        exit 1
+!    fi
+!
+!    latest_tag=$(echo "$latest_info" | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+!
+!    if [ -z "$latest_tag" ]; then
+!        echo "❌ Could not determine latest version"
+!        exit 1
+!    fi
+!
+!    echo "📦 Latest release: $latest_tag"
+!
+!    # Create backup
+!    backup_dir="$install_dir.backup.$(date +%Y%m%d-%H%M%S)"
+!    echo "💾 Creating backup at: $backup_dir"
+!    cp -r "$install_dir" "$backup_dir"
+!
+!    # Download and extract latest release
+!    temp_dir=$(mktemp -d)
+!    echo "⬇️  Downloading latest release..."
+!
+!    download_url="https://api.github.com/repos/jeremyeder/claude-slash/tarball/$latest_tag"
+!    tarball_file="$temp_dir/claude-slash.tar.gz"
+!    curl -sL "$download_url" -o "$tarball_file"
+!    if [ $? -ne 0 ] || ! tar -xz -C "$temp_dir" --strip-components=1 -f "$tarball_file"; then
+!        echo "❌ Failed to download release"
+!        echo "🔄 Restoring from backup..."
+!        rm -rf "$install_dir"
+!        mv "$backup_dir" "$install_dir"
+!        rm -rf "$temp_dir"
+!        exit 1
+!    fi
+!
+!    # Update commands
+!    if [ -d "$temp_dir/.claude/commands" ]; then
+!        echo "🔄 Updating commands..."
+!
+!        # Remove old commands
+!        find "$install_dir" -name "*.md" -delete
+!
+!        # Copy new commands
+!        cp "$temp_dir/.claude/commands/"*.md "$install_dir/"
+!
+!        echo "✅ Update completed successfully!"
+!        echo "📦 Updated to: $latest_tag"
+!        echo "📁 Backup saved to: $backup_dir"
+!        echo "🗑️  Remove backup with: rm -rf $backup_dir"
+!
+!    else
+!        echo "❌ Downloaded release doesn't contain command files"
+!        echo "🔄 Restoring from backup..."
+!        rm -rf "$install_dir"
+!        mv "$backup_dir" "$install_dir"
+!    fi
+!
+!    # Cleanup
+!    rm -rf "$temp_dir"
+!
+!    echo
+!    echo "🎉 claude-slash commands updated successfully!"
+!    exit 0
+!fi
+
+!# Default help mode
 !echo -e "${BLUE}📋 Available Claude Slash Commands${NC}"
 !echo -e "${BLUE}=================================${NC}"
 !echo ""
@@ -120,8 +226,7 @@ This command displays a comprehensive list of all available claude-slash command
 !echo ""
 !echo -e "${YELLOW}💡 Tips:${NC}"
 !echo "• Type any command above to use it"
-!echo "• Most commands have shorthand aliases (e.g., /ckpt for /checkpoint)"
 !echo "• Use /learn to extract insights from your current session"
-!echo "• Use /update to get the latest commands"
+!echo "• Use /slash update to get the latest commands"
 !echo ""
 !echo -e "${BLUE}📖 For more information visit:${NC} https://github.com/jeremyeder/claude-slash"
