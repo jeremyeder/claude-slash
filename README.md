@@ -1,97 +1,195 @@
 # claude-slash
 
-Custom slash commands for Claude Code CLI. Save and restore your coding sessions, extract learnings, and enhance your development workflow with powerful slash commands.
+A powerful Python CLI with custom slash commands for Claude Code. Enhance your development workflow with session management, interactive learning, and rich terminal UI experiences.
 
 ## Features
 
-- **🎯 `/slash`** - Display all available commands with descriptions
-- **🔄 `/slash update`** - Update commands to latest release
+- **🎯 `/slash`** - Display all available commands with Rich-formatted help
+- **🔄 `/slash update`** - Update commands to latest release with progress tracking
 - **🎓 `/learn`** - Interactive learning and development workflow
-- **⚙️ `/menuconfig`** - Interactive configuration interface
+- **⚙️ `/menuconfig`** - Interactive configuration interface with TUI
+- **🐍 Python CLI** - Modern Python implementation with Rich terminal UI
+- **📦 Hybrid Commands** - Support for both Python commands and legacy shell scripts
 
 ## Installation
 
-### One-Line Install (Recommended)
+### Python Installation (Recommended)
+
+#### From Source
+```bash
+# Clone the repository
+git clone https://github.com/jeremyeder/claude-slash.git
+cd claude-slash
+
+# Install with pip (Python 3.13+ required)
+pip install .
+
+# Or install in development mode
+pip install -e .
+```
+
+#### From PyPI (Future)
+```bash
+# Once published to PyPI
+pip install claude-slash
+```
+
+### Legacy Shell Installation
+
+#### One-Line Install
 ```bash
 curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash
 ```
 
-### Global Installation (All Projects)
+#### Global Installation (All Projects)
 ```bash
 curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash -s -- --global
 ```
 
 ## Usage
 
-### Getting Started
+### Python CLI Usage
 
-After installation, use the `/slash` command to see all available commands:
+After Python installation, you can use claude-slash in multiple ways:
 
 ```bash
-# Display all available commands
-/slash
+# Run as a CLI application
+claude-slash slash          # Show all commands
+claude-slash learn          # Start learning session
+claude-slash menuconfig     # Interactive configuration
+
+# Check version
+claude-slash version
 ```
 
-### Learn Command
+### Claude Code Integration
 
-The `/learn` command provides an interactive learning and development workflow:
+For use within Claude Code CLI environment:
 
 ```bash
+# Display all available commands with Rich formatting
+/slash
+
 # Start interactive learning session
+/learn
+
+# Interactive configuration interface
+/menuconfig
+
+# Update to latest release
+/slash update
+```
+
+### Command Examples
+
+#### Learning Command
+```bash
+# Interactive learning workflow
 /learn
 ```
 
-### Update Commands
-
-Update your claude-slash commands to the latest release:
-
+#### Configuration
 ```bash
-# Update to latest release
+# Launch interactive configuration TUI
+/menuconfig
+```
+
+#### Help and Updates
+```bash
+# Show help with Rich formatting
+/slash
+
+# Update commands with progress tracking
 /slash update
 ```
 
 ## Command Reference
 
-| Command | Description |
-|---------|--------------|
-| `/slash` | Display all available commands |
-| `/slash update` | Update to latest release |
-| `/learn` | Interactive learning workflow |
-| `/menuconfig` | Interactive configuration interface |
+| Command | Description | Type |
+|---------|-------------|------|
+| `/slash` | Display help with Rich formatting | Python |
+| `/slash update` | Update to latest release with progress | Python |
+| `/learn` | Interactive learning workflow | Python |
+| `/menuconfig` | Interactive configuration interface (TUI) | Python |
+| `checkpoint` | Create session checkpoints | Python |
+| `restore` | Restore from session checkpoints | Python |
+
+### Command Types
+- **Python Commands**: Modern Rich-formatted CLI commands with progress bars, tables, and interactive elements
+- **Legacy Shell Commands**: Markdown-based commands with embedded shell scripts (`.claude/commands/*.md`)
 
 ## How It Works
 
-Claude Code slash commands are markdown files stored in `.claude/commands/` that contain:
-- Command documentation
-- Shell script implementations using `!` prefix
-- Dynamic argument handling with `$ARGUMENTS`
+### Hybrid Architecture
+
+Claude-slash uses a hybrid architecture supporting both modern Python commands and legacy shell commands:
+
+#### Python Commands
+- Located in `src/claude_slash/commands/`
+- Use Rich for beautiful terminal output
+- Provide progress bars, interactive elements, and formatted help
+- Type-safe with full Python tooling support
+
+#### Legacy Shell Commands
+- Stored as markdown files in `.claude/commands/`
+- Contain embedded shell scripts using `!` prefix
+- Support dynamic argument handling with `$ARGUMENTS`
+- Maintained for backward compatibility
+
+### Command Discovery
+The CLI automatically discovers and registers all available commands from both sources, providing a unified interface for all functionality.
 
 ## Contributing
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines.
+
+### Quick Start
+
 1. Fork this repository
-2. Create a new command file in `.claude/commands/`
-3. Follow the existing command format
-4. Add documentation and examples
-5. Run linting and tests locally
-6. Submit a pull request
+2. Clone and set up development environment:
+   ```bash
+   git clone https://github.com/your-username/claude-slash.git
+   cd claude-slash
+   pip install -e ".[dev]"  # Install with development dependencies
+   ```
+3. Choose your contribution type:
+   - **Python Commands**: Create new files in `src/claude_slash/commands/`
+   - **Legacy Commands**: Create markdown files in `.claude/commands/`
+4. Follow existing patterns and add comprehensive tests
+5. Run quality checks and submit a pull request
 
 ### Local Development
 
+#### Python Development
 ```bash
-# Set up pre-commit hooks (automated quality checks - RECOMMENDED)
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Run Python tests
+pytest
+
+# Run Python linting
+black src/ tests/
+isort src/ tests/
+flake8 src/ tests/
+mypy src/
+
+# Run all Python quality checks
+pytest && black --check src/ tests/ && isort --check src/ tests/ && flake8 src/ tests/ && mypy src/
+```
+
+#### Legacy Development
+```bash
+# Set up pre-commit hooks for shell scripts
 ./install.sh --hooks
 
-# Alternative manual setup:
-pip install pre-commit
-pre-commit install
-
-# Run linting manually
-npm run lint
-
-# Run tests
+# Run legacy shell tests
 npm test
 
-# Run both linting and tests
+# Run markdown/shell linting
+npm run lint
+
+# Run both legacy linting and tests
 npm run validate
 ```
 
@@ -111,6 +209,14 @@ Pre-commit hooks automatically run quality checks before each commit to prevent 
 
 ### Command Development Guidelines
 
+#### Python Commands (Recommended)
+- Inherit from `BaseCommand` class for consistent behavior
+- Use Rich for all terminal output (panels, tables, progress bars)
+- Include comprehensive docstrings with examples
+- Implement proper error handling with user-friendly messages
+- Add type hints for all methods and properties
+
+#### Legacy Shell Commands
 - Use descriptive names and provide aliases for common commands
 - Include comprehensive documentation with usage examples
 - Test commands thoroughly before submitting

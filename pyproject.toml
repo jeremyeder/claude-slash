@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "claude-slash"
 version = "1.2.1"
-description = "Custom slash commands for Claude Code CLI"
+description = "Python CLI with custom slash commands for Claude Code - session management, interactive learning, and rich terminal UI"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [
@@ -17,7 +17,13 @@ keywords = [
     "cli",
     "slash-commands",
     "checkpoint",
-    "session-management"
+    "session-management",
+    "rich",
+    "terminal-ui",
+    "interactive",
+    "development-tools",
+    "python-cli",
+    "hybrid-commands"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -27,6 +33,10 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: System :: Shells",
+    "Topic :: Terminals",
+    "Topic :: Utilities",
+    "Environment :: Console",
+    "Framework :: Rich",
 ]
 requires-python = ">=3.13"
 dependencies = [

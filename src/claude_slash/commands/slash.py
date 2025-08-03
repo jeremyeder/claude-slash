@@ -35,7 +35,12 @@ class SlashCommand(BaseCommand):
     @property
     def help_text(self) -> str:
         """Return the help text for the command."""
-        return "Show help and available commands or update to latest release"
+        return ("Display Rich-formatted help with all available commands, or update "
+                "to the latest release with progress tracking.\n\n"
+                "Examples:\n"
+                "  /slash              # Show help with all commands\n"
+                "  /slash update       # Update to latest release\n"
+                "  claude-slash slash  # Show help (CLI mode)")
 
     def execute(self, **kwargs: Any) -> None:
         """
