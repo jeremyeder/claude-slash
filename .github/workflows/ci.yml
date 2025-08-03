@@ -123,19 +123,27 @@ jobs:
         echo "Running security checks..."
         for file in .claude/commands/*.md; do
           echo "Checking $file for security issues..."
-          # Check for dangerous patterns
+
+          # Check for dangerous rm commands
           if grep -q "rm -rf /" "$file"; then
             echo "❌ Dangerous rm command found in $file"
             exit 1
           fi
-          if grep -q "sudo " "$file"; then
-            echo "❌ Sudo command found in $file"
+
+          # Check for sudo in executable context (not documentation)
+          # Allow sudo in comments/documentation but not in actual shell commands
+          if grep "^!" "$file" | grep -q "sudo "; then
+            echo "❌ Sudo command found in executable code in $file"
+            echo "   Sudo commands are not allowed in command implementations"
             exit 1
           fi
+
+          # Check for dangerous curl pipe to shell
           if grep -q "curl.*|.*sh" "$file"; then
             echo "❌ Dangerous curl pipe to shell found in $file"
             exit 1
           fi
+
           echo "✅ $file security check passed"
         done
 
