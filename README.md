@@ -1,177 +1,222 @@
 # claude-slash
 
-Custom slash commands for Claude Code CLI. Save and restore your coding sessions, extract learnings, and enhance your development workflow with powerful slash commands.
+A Python CLI tool for enhanced development workflows with Rich terminal UI and interactive commands.
 
 ## Features
 
-- **🎯 `/slash`** - Display all available commands with descriptions
-- **🔄 `/slash update`** - Update commands to latest release
-- **🎓 `/learn`** - Interactive learning and development workflow
-- **⚙️ `/menuconfig`** - Interactive configuration interface
+- **Rich Terminal UI** - Beautiful console output with colors and formatting
+- **Command Discovery** - Automatic discovery and registration of command modules
+- **Interactive Workflows** - User-friendly interactive command interfaces
+- **Extensible Architecture** - Easy to add new commands and functionality
 
 ## Installation
 
-### One-Line Install (Recommended)
+### Using UV (Recommended)
 ```bash
-curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash
+# Install from source
+git clone https://github.com/jeremyeder/claude-slash.git
+cd claude-slash
+uv venv && source venv/bin/activate
+uv sync --dev
 ```
 
-### Global Installation (All Projects)
+### Using Pip
 ```bash
-curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash -s -- --global
+# Install from source
+git clone https://github.com/jeremyeder/claude-slash.git
+cd claude-slash
+pip install -e .
 ```
 
 ## Usage
 
 ### Getting Started
 
-After installation, use the `/slash` command to see all available commands:
+After installation, use the `claude-slash` command:
 
 ```bash
-# Display all available commands
-/slash
-```
+# Display version information
+claude-slash version
 
-### Learn Command
+# Get help for all commands
+claude-slash --help
 
-The `/learn` command provides an interactive learning and development workflow:
-
-```bash
-# Start interactive learning session
-/learn
-```
-
-### Update Commands
-
-Update your claude-slash commands to the latest release:
-
-```bash
-# Update to latest release
-/slash update
+# Run specific commands (examples)
+claude-slash checkpoint session-1
+claude-slash restore session-1
 ```
 
 ## Command Reference
 
-| Command | Description |
-|---------|--------------|
-| `/slash` | Display all available commands |
-| `/slash update` | Update to latest release |
-| `/learn` | Interactive learning workflow |
-| `/menuconfig` | Interactive configuration interface |
+The application uses automatic command discovery. Available commands are dynamically loaded from the `src/claude_slash/commands/` directory.
 
-## How It Works
+## Development
 
-Claude Code slash commands are markdown files stored in `.claude/commands/` that contain:
-- Command documentation
-- Shell script implementations using `!` prefix
-- Dynamic argument handling with `$ARGUMENTS`
+### Prerequisites
 
-## Contributing
+- Python 3.13+
+- UV (recommended) or pip
+- Node.js (for markdown linting)
 
-1. Fork this repository
-2. Create a new command file in `.claude/commands/`
-3. Follow the existing command format
-4. Add documentation and examples
-5. Run linting and tests locally
-6. Submit a pull request
-
-### Local Development
+### Local Development Setup
 
 ```bash
-# Set up pre-commit hooks (automated quality checks - RECOMMENDED)
-./install.sh --hooks
+# Clone the repository
+git clone https://github.com/jeremyeder/claude-slash.git
+cd claude-slash
 
-# Alternative manual setup:
-pip install pre-commit
-pre-commit install
+# Set up Python environment
+uv venv && source venv/bin/activate
+uv sync --dev
 
-# Run linting manually
-npm run lint
+# Install Node.js dependencies for linting
+npm install
 
-# Run tests
+# Run the CLI locally
+uv run claude-slash --help
+```
+
+### Testing
+
+```bash
+# Run all tests
 npm test
+
+# Python-specific testing
+uv run pytest
+uv run pytest --cov=claude_slash  # With coverage
+uv run pytest tests/test_main.py  # Specific test file
+
+# Run linting
+npm run lint
 
 # Run both linting and tests
 npm run validate
 ```
 
-### Pre-commit Hooks
+### Code Quality
 
-Pre-commit hooks automatically run quality checks before each commit to prevent CI failures:
+```bash
+# Format code
+uv run black src/ tests/
 
-- **Markdown linting** - Ensures consistent markdown formatting
-- **Shell script validation** - Checks shell syntax with shellcheck
-- **File quality checks** - Removes trailing whitespace, ensures proper file endings
+# Sort imports
+uv run isort src/ tests/
 
-**Setup**: Run `./install.sh --hooks` to automatically install and configure pre-commit hooks.
+# Lint code
+uv run flake8 src/ tests/
 
-**Manual execution**: `pre-commit run --all-files`
+# Type checking
+uv run mypy src/
+```
 
-**Skip once**: `git commit --no-verify` (use sparingly)
+### Adding New Commands
 
-### Command Development Guidelines
+1. Create a new Python file in `src/claude_slash/commands/`
+2. Inherit from `BaseCommand`
+3. Implement required methods and attributes
+4. Commands are automatically discovered and registered
 
-- Use descriptive names and provide aliases for common commands
-- Include comprehensive documentation with usage examples
-- Test commands thoroughly before submitting
-- Ensure security best practices (no hardcoded paths, safe shell operations)
+Example:
+```python
+from .base import BaseCommand
+import typer
+
+class NewCommand(BaseCommand):
+    name = "new"
+    help_text = "Description of the new command"
+
+    def execute(self, arg: str = typer.Argument("default")):
+        """Execute the command logic."""
+        self.console.print(f"Running new command with: {arg}")
+```
+
+### Version Management
+
+```bash
+# Bump version levels
+npm run bump:patch
+npm run bump:minor
+npm run bump:major
+
+# Create release (bump + tag + push)
+npm run release:patch
+npm run release:minor
+npm run release:major
+```
+
+## Contributing
+
+1. Fork this repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Run linting and tests locally
+6. Submit a pull request
+
+### Development Guidelines
+
+- Follow PEP 8 style guidelines
+- Add type hints to all public interfaces
+- Write tests for new functionality
+- Update documentation as needed
+- Use Rich console for all terminal output
+
+## Architecture
+
+### Project Structure
+
+```
+src/claude_slash/
+├── main.py              # CLI entry point with command discovery
+├── commands/            # Command implementations
+│   ├── base.py         # Base command class
+│   ├── example.py      # Example command
+│   └── ...             # Additional commands
+└── ui/                 # User interface components
+    ├── console.py      # Console formatting utilities
+    ├── formatting.py   # Text formatting helpers
+    └── progress.py     # Progress indicators
+```
+
+### Key Components
+
+- **Command Discovery**: Automatic loading and registration of command classes
+- **Rich Integration**: Enhanced terminal output with colors and formatting
+- **Typer Framework**: Robust CLI argument parsing and help generation
+- **Modular Design**: Easy to extend with new commands and functionality
 
 ## Security
 
 - Commands are executed in your local environment
 - No external network calls without explicit user consent
-- All data stays local to your git repository
-- Review command implementations before installation
+- All data processing happens locally
+- Review command implementations before use
 
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/jeremyeder/claude-slash/issues)
-- **Documentation**: [Claude Code Docs](https://docs.anthropic.com/en/docs/claude-code/slash-commands)
+- **Documentation**: See CLAUDE.md for development guidelines
+
+## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## Updating Commands
-
-### Automatic Updates
-
-Keep your commands current with the latest features:
-
-```bash
-# Update via slash command
-/slash update
-
-# Or update via install script
-curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh | bash -s -- --update
-```
-
-### Release Process
+## Release Process
 
 New releases are automatically created when tags are pushed:
 
 ```bash
 # Create and push a new release tag
-git tag v1.1.0
-git push origin v1.1.0
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
 This triggers GitHub Actions to:
 - Create a GitHub release with changelog
-- Package command files as downloadable assets
-- Make the release available for updates
-
-## Roadmap
-
-- [x] Dynamic command discovery with `/slash`
-- [x] Integrated update system with `/slash update`
-- [x] Interactive learning workflow
-- [x] Comprehensive test suite with 28+ test cases
-- [x] Interactive configuration interface
-- [ ] Project templates and scaffolding
-- [ ] Git workflow helpers
-- [ ] Development environment setup commands
-- [ ] Integration with popular tools (Docker, Kubernetes, etc.)
+- Build and publish Python packages
+- Update release documentation
 
 ---
 
-*Made with ❤️ for the Claude Code community*
-<!-- CI trigger -->
+*Built with Python, Typer, and Rich for an enhanced development experience*

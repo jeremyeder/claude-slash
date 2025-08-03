@@ -1,17 +1,17 @@
 {
   "name": "claude-slash",
   "version": "1.2.0",
-  "description": "Custom slash commands for Claude Code CLI",
+  "description": "Python CLI tool for enhanced development workflows",
   "scripts": {
     "version": "echo $npm_package_version",
     "bump:patch": "./scripts/bump-version.sh patch",
-    "bump:minor": "./scripts/bump-version.sh minor", 
+    "bump:minor": "./scripts/bump-version.sh minor",
     "bump:major": "./scripts/bump-version.sh major",
     "release:patch": "./scripts/release.sh patch",
     "release:minor": "./scripts/release.sh minor",
     "release:major": "./scripts/release.sh major",
-    "test": "find tests -name '*.sh' -exec bash {} \\;",
-    "lint": "markdownlint --config .markdownlint.json *.md .claude/commands/*.md && shellcheck install.sh scripts/*.sh",
+    "test": "uv run pytest",
+    "lint": "markdownlint --config .markdownlint.json *.md && shellcheck scripts/*.sh",
     "validate": "npm run lint && npm run test"
   },
   "repository": {
@@ -19,12 +19,11 @@
     "url": "https://github.com/jeremyeder/claude-slash.git"
   },
   "keywords": [
-    "claude",
-    "claude-code",
     "cli",
-    "slash-commands",
-    "checkpoint",
-    "session-management"
+    "python",
+    "development",
+    "workflow",
+    "tools"
   ],
   "author": "Jeremy Eder",
   "license": "MIT",
