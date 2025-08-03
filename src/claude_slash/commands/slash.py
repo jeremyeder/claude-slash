@@ -45,12 +45,12 @@ class SlashCommand(BaseCommand):
     def execute(self, **kwargs: Any) -> None:
         """
         Execute the slash command.
-        
+
         Args:
             **kwargs: Command arguments passed from Typer
         """
         subcommand = kwargs.get("subcommand")
-        
+
         if subcommand == "update":
             self._handle_update()
         else:
@@ -67,7 +67,7 @@ class SlashCommand(BaseCommand):
             except Exception as e:
                 self.console.print(f"[bold red]Error executing {self.name}:[/bold red] {str(e)}")
                 raise typer.Exit(1)
-        
+
         return command_wrapper
 
     def _handle_help(self) -> None:
@@ -76,7 +76,7 @@ class SlashCommand(BaseCommand):
             "[bold blue]📋 Available Claude Slash Commands[/bold blue]",
             style="blue"
         ))
-        
+
         # Get the commands directory
         commands_dir = self._find_commands_directory()
         if not commands_dir:
@@ -101,7 +101,7 @@ class SlashCommand(BaseCommand):
 
         for cmd_file in sorted(command_files):
             filename = cmd_file.stem
-            
+
             # Skip this help command to avoid recursion
             if filename == "slash":
                 continue
@@ -133,7 +133,7 @@ class SlashCommand(BaseCommand):
             style="yellow"
         )
         self.console.print(tips_panel)
-        
+
         self.console.print()
         self.console.print("[blue]📖 For more information visit:[/blue] https://github.com/jeremyeder/claude-slash")
 
@@ -163,17 +163,17 @@ class SlashCommand(BaseCommand):
                 )
                 latest_info = json.loads(result.stdout)
                 latest_tag = latest_info.get("tag_name")
-                
+
                 if not latest_tag:
                     self.error("❌ Could not determine latest version")
                     return
 
-        except subprocess.CalledProcessError:
-            self.error("❌ Failed to check for updates (network error or gh CLI not available)")
-            return
-        except json.JSONDecodeError:
-            self.error("❌ Failed to parse release information")
-            return
+            except subprocess.CalledProcessError:
+                self.error("❌ Failed to check for updates (network error or gh CLI not available)")
+                return
+            except json.JSONDecodeError:
+                self.error("❌ Failed to parse release information")
+                return
 
         self.console.print(f"📦 Latest release: {latest_tag}")
 
@@ -212,7 +212,7 @@ class SlashCommand(BaseCommand):
                     old_files = list(Path(install_dir).glob("*.md"))
                     new_files = list(Path(commands_source).glob("*.md"))
                     total_operations = len(old_files) + len(new_files)
-                    
+
                     with track_operation("🔄 Updating commands...", total=total_operations, operation_type="file") as (progress, task):
                         # Remove old commands
                         for md_file in old_files:
@@ -286,7 +286,7 @@ class SlashCommand(BaseCommand):
     def _detect_installation(self) -> tuple[Optional[str], str]:
         """
         Detect installation type and location.
-        
+
         Returns:
             Tuple of (install_dir, install_type) or (None, "") if not found
         """
@@ -305,10 +305,10 @@ class SlashCommand(BaseCommand):
     def _extract_description(self, file_path: Path) -> str:
         """
         Extract command description from markdown file.
-        
+
         Args:
             file_path: Path to the markdown command file
-            
+
         Returns:
             Extracted description or default text
         """
@@ -343,10 +343,10 @@ class SlashCommand(BaseCommand):
     def _extract_usage(self, file_path: Path) -> str:
         """
         Extract usage from markdown file.
-        
+
         Args:
             file_path: Path to the markdown command file
-            
+
         Returns:
             Extracted usage string or empty string
         """
