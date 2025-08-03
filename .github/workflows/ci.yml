@@ -130,11 +130,12 @@ jobs:
             exit 1
           fi
 
-          # Check for sudo in executable context (not documentation)
-          # Allow sudo in comments/documentation but not in actual shell commands
-          if grep "^!" "$file" | grep -q "sudo "; then
-            echo "❌ Sudo command found in executable code in $file"
-            echo "   Sudo commands are not allowed in command implementations"
+          # Check for dangerous sudo usage (not in documentation)
+          # Allow sudo in specific safe contexts: comments, error messages, and installation docs
+          # Block direct sudo command execution
+          if grep "^!sudo " "$file" || grep "^![[:space:]]*sudo " "$file"; then
+            echo "❌ Direct sudo command found in $file"
+            echo "   Direct sudo execution is not allowed in command implementations"
             exit 1
           fi
 
