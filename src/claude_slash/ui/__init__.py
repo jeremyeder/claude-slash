@@ -27,13 +27,13 @@ Usage:
 
 from .console import get_console, with_progress, with_spinner
 from .formatting import (
-    create_status_panel,
     create_info_table,
+    create_status_panel,
     format_command_table,
     format_error_message,
+    format_info_message,
     format_success_message,
     format_warning_message,
-    format_info_message,
 )
 from .progress import ProgressManager, SpinnerManager, track_operation
 

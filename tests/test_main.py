@@ -1,13 +1,14 @@
 """Tests for claude-slash main module and CLI functionality."""
 
 import importlib
-import pytest
 from pathlib import Path
-from typer.testing import CliRunner
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from claude_slash.main import app, discover_commands, register_commands
+import pytest
+from typer.testing import CliRunner
+
 from claude_slash.commands.base import BaseCommand
+from claude_slash.main import app, discover_commands, register_commands
 
 
 class MockCommand(BaseCommand):
@@ -30,8 +31,8 @@ class TestCommandDiscovery:
 
     def test_discover_commands_finds_base_command_subclasses(self):
         """Test that discover_commands finds BaseCommand subclasses."""
-        with patch('claude_slash.main.pkgutil.iter_modules') as mock_iter:
-            with patch('claude_slash.main.importlib.import_module') as mock_import:
+        with patch("claude_slash.main.pkgutil.iter_modules") as mock_iter:
+            with patch("claude_slash.main.importlib.import_module") as mock_import:
                 # Mock the package structure
                 mock_iter.return_value = [
                     (None, "example", False),
@@ -45,26 +46,27 @@ class TestCommandDiscovery:
                 mock_import.return_value = mock_module
 
                 # Mock dir() to return our command class
-                with patch('builtins.dir', return_value=['MockExampleCommand']):
-                    with patch('builtins.getattr', return_value=MockCommand):
+                with patch("builtins.dir", return_value=["MockExampleCommand"]):
+                    with patch("builtins.getattr", return_value=MockCommand):
                         commands = discover_commands()
 
-                        assert len(commands) >= 0  # Should find commands or handle gracefully
-
+                        assert (
+                            len(commands) >= 0
+                        )  # Should find commands or handle gracefully
 
     def test_discover_commands_handles_import_errors(self):
         """Test that discover_commands handles import errors gracefully."""
-        with patch('claude_slash.main.pkgutil.iter_modules') as mock_iter:
-            with patch('claude_slash.main.importlib.import_module') as mock_import:
+        with patch("claude_slash.main.pkgutil.iter_modules") as mock_iter:
+            with patch("claude_slash.main.importlib.import_module") as mock_import:
                 mock_iter.return_value = [(None, "broken", False)]
                 mock_import.side_effect = ImportError("Module not found")
 
                 commands = discover_commands()
                 assert isinstance(commands, list)
 
-
     def test_register_commands_handles_registration_errors(self):
         """Test that register_commands handles command registration errors."""
+
         class BrokenCommand(BaseCommand):
             @property
             def name(self):
@@ -80,7 +82,7 @@ class TestCommandDiscovery:
             def create_typer_command(self):
                 raise Exception("Command creation failed")
 
-        with patch('claude_slash.main.discover_commands', return_value=[BrokenCommand]):
+        with patch("claude_slash.main.discover_commands", return_value=[BrokenCommand]):
             # Should not raise an exception
             register_commands()
 
@@ -137,9 +139,7 @@ class TestFixtures:
 
         # Test git rev-parse mock
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True
         )
         assert result.returncode == 0
         assert "/tmp/test-repo" in result.stdout
@@ -150,9 +150,7 @@ class TestFixtures:
 
         # Test gh auth status mock
         result = subprocess.run(
-            ["gh", "auth", "status"],
-            capture_output=True,
-            text=True
+            ["gh", "auth", "status"], capture_output=True, text=True
         )
         assert result.returncode == 0
 
@@ -226,9 +224,7 @@ class TestSubprocessMocking:
 
         # Test git status mock
         result = subprocess.run(
-            ["git", "status", "--porcelain"],
-            capture_output=True,
-            text=True
+            ["git", "status", "--porcelain"], capture_output=True, text=True
         )
         assert result.returncode == 0
         assert "file1.py" in result.stdout
@@ -248,7 +244,7 @@ class TestSubprocessMocking:
         result = subprocess.run(
             ["gh", "repo", "view", "--json", "name,owner"],
             capture_output=True,
-            text=True
+            text=True,
         )
         assert result.returncode == 0
         assert "test-repo" in result.stdout

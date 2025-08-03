@@ -1,9 +1,9 @@
 """
 claude-slash: Python CLI with custom slash commands for Claude Code
 
-This package provides a modern Python CLI with Rich terminal UI for Claude Code,
-featuring session management, interactive learning workflows, and hybrid command
-support (both Python and legacy shell commands).
+This package provides a modern Python CLI with Rich terminal UI for Claude
+Code, featuring session management, interactive learning workflows, and hybrid
+command support (both Python and legacy shell commands).
 
 Key Features:
 - Rich-formatted terminal output with progress bars and interactive elements
@@ -17,7 +17,7 @@ Usage:
     claude-slash slash          # Show all commands
     claude-slash learn          # Interactive learning
     claude-slash menuconfig     # Configuration interface
-    
+
     # Within Claude Code environment
     /slash                      # Show help
     /learn                      # Learning workflow

@@ -54,13 +54,17 @@ def discover_commands() -> List[Type[BaseCommand]]:
                 # Find all classes that inherit from BaseCommand
                 for item_name in dir(module):
                     item = getattr(module, item_name)
-                    if (inspect.isclass(item) and
-                        issubclass(item, BaseCommand) and
-                        item is not BaseCommand):
+                    if (
+                        inspect.isclass(item)
+                        and issubclass(item, BaseCommand)
+                        and item is not BaseCommand
+                    ):
                         commands.append(item)
 
             except ImportError as e:
-                console.print(f"[yellow]Warning: Could not import command module {name}: {e}[/yellow]")
+                console.print(
+                    f"[yellow]Warning: Could not import command module {name}: {e}[/yellow]"
+                )
                 continue
 
     except ImportError as e:
@@ -84,10 +88,14 @@ def register_commands() -> None:
             command_func = command_instance.create_typer_command()
 
             # Register the command with the app
-            app.command(name=command_instance.name, help=command_instance.help_text)(command_func)
+            app.command(name=command_instance.name, help=command_instance.help_text)(
+                command_func
+            )
 
         except Exception as e:
-            console.print(f"[red]Error registering command {command_class.__name__}: {e}[/red]")
+            console.print(
+                f"[red]Error registering command {command_class.__name__}: {e}[/red]"
+            )
 
 
 @app.command()
@@ -95,6 +103,7 @@ def version():
     """Show version information."""
     try:
         from . import __version__
+
         version_str = f"claude-slash v{__version__}"
     except ImportError:
         version_str = "claude-slash (version unknown)"

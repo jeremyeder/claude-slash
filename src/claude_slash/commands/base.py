@@ -6,16 +6,16 @@ should inherit from to ensure consistent behavior and type safety.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Optional
+
 import typer
-from rich.console import Console
 
 from ..ui import (
-    get_console,
     format_error_message,
-    format_success_message,
     format_info_message,
-    format_warning_message
+    format_success_message,
+    format_warning_message,
+    get_console,
 )
 
 
@@ -63,12 +63,15 @@ class BaseCommand(ABC):
         Returns:
             A callable function that can be registered with Typer
         """
+
         def command_wrapper(**kwargs) -> None:
-            """Wrapper function to handle command execution with error handling."""
+            """Wrapper function to handle command execution."""
             try:
                 self.execute(**kwargs)
             except Exception as e:
-                self.console.print(f"[bold red]Error executing {self.name}:[/bold red] {str(e)}")
+                self.console.print(
+                    f"[bold red]Error executing {self.name}:[/bold red] " f"{str(e)}"
+                )
                 raise typer.Exit(1)
 
         # Set the function name and docstring for better help text

@@ -8,18 +8,18 @@ This module provides the main slash command that:
 
 import json
 import os
+import shutil
 import subprocess
 import tempfile
-import shutil
 from pathlib import Path
-from typing import Any, Optional, List, Dict
-import typer
-from rich.table import Table
-from rich.panel import Panel
-from rich.text import Text
+from typing import Any, Optional
 
+import typer
+from rich.panel import Panel
+from rich.table import Table
+
+from ..ui import SpinnerManager, track_operation
 from .base import BaseCommand
-from ..ui import SpinnerManager, ProgressManager, track_operation
 
 
 class SlashCommand(BaseCommand):
@@ -35,12 +35,14 @@ class SlashCommand(BaseCommand):
     @property
     def help_text(self) -> str:
         """Return the help text for the command."""
-        return ("Display Rich-formatted help with all available commands, or update "
-                "to the latest release with progress tracking.\n\n"
-                "Examples:\n"
-                "  /slash              # Show help with all commands\n"
-                "  /slash update       # Update to latest release\n"
-                "  claude-slash slash  # Show help (CLI mode)")
+        return (
+            "Display Rich-formatted help with all available commands, or update "
+            "to the latest release with progress tracking.\n\n"
+            "Examples:\n"
+            "  /slash              # Show help with all commands\n"
+            "  /slash update       # Update to latest release\n"
+            "  claude-slash slash  # Show help (CLI mode)"
+        )
 
     def execute(self, **kwargs: Any) -> None:
         """
@@ -58,31 +60,40 @@ class SlashCommand(BaseCommand):
 
     def create_typer_command(self):
         """Create a Typer command with custom arguments."""
+
         def command_wrapper(
-            subcommand: Optional[str] = typer.Argument(None, help="Subcommand: help (default) or update")
+            subcommand: Optional[str] = typer.Argument(
+                None, help="Subcommand: help (default) or update"
+            )
         ) -> None:
             """Show help and available commands or update to latest release."""
             try:
                 self.execute(subcommand=subcommand)
             except Exception as e:
-                self.console.print(f"[bold red]Error executing {self.name}:[/bold red] {str(e)}")
+                self.console.print(
+                    f"[bold red]Error executing {self.name}:[/bold red] {str(e)}"
+                )
                 raise typer.Exit(1)
 
         return command_wrapper
 
     def _handle_help(self) -> None:
         """Handle the help subcommand (default behavior)."""
-        self.console.print(Panel(
-            "[bold blue]📋 Available Claude Slash Commands[/bold blue]",
-            style="blue"
-        ))
+        self.console.print(
+            Panel(
+                "[bold blue]📋 Available Claude Slash Commands[/bold blue]",
+                style="blue",
+            )
+        )
 
         # Get the commands directory
         commands_dir = self._find_commands_directory()
         if not commands_dir:
-            self.error("❌ No claude-slash commands found\n"
-                      "Install commands by downloading and running install.sh from:\n"
-                      "https://github.com/jeremyeder/claude-slash")
+            self.error(
+                "❌ No claude-slash commands found\n"
+                "Install commands by downloading and running install.sh from:\n"
+                "https://github.com/jeremyeder/claude-slash"
+            )
             return
 
         self.console.print(f"[cyan]Commands installed in: {commands_dir}[/cyan]")
@@ -130,12 +141,14 @@ class SlashCommand(BaseCommand):
             "• Type any command above to use it\n"
             "• Use /learn to extract insights from your current session\n"
             "• Use /slash update to get the latest commands",
-            style="yellow"
+            style="yellow",
         )
         self.console.print(tips_panel)
 
         self.console.print()
-        self.console.print("[blue]📖 For more information visit:[/blue] https://github.com/jeremyeder/claude-slash")
+        self.console.print(
+            "[blue]📖 For more information visit:[/blue] https://github.com/jeremyeder/claude-slash"
+        )
 
     def _handle_update(self) -> None:
         """Handle the update subcommand."""
@@ -145,21 +158,25 @@ class SlashCommand(BaseCommand):
         # Determine installation location
         install_dir, install_type = self._detect_installation()
         if not install_dir:
-            self.error("❌ No claude-slash installation found\n"
-                      "Run the installer first:\n"
-                      "curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh -o install.sh && bash install.sh")
+            self.error(
+                "❌ No claude-slash installation found\n"
+                "Run the installer first:\n"
+                "curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh -o install.sh && bash install.sh"
+            )
             return
 
         self.console.print(f"📍 Found {install_type} installation at: {install_dir}")
 
         # Check for latest release using gh CLI with spinner
-        with SpinnerManager.network_operation("🔍 Checking for latest release...") as status:
+        with SpinnerManager.network_operation(
+            "🔍 Checking for latest release..."
+        ) as status:
             try:
                 result = subprocess.run(
                     ["gh", "api", "repos/jeremyeder/claude-slash/releases/latest"],
                     capture_output=True,
                     text=True,
-                    check=True
+                    check=True,
                 )
                 latest_info = json.loads(result.stdout)
                 latest_tag = latest_info.get("tag_name")
@@ -169,7 +186,9 @@ class SlashCommand(BaseCommand):
                     return
 
             except subprocess.CalledProcessError:
-                self.error("❌ Failed to check for updates (network error or gh CLI not available)")
+                self.error(
+                    "❌ Failed to check for updates (network error or gh CLI not available)"
+                )
                 return
             except json.JSONDecodeError:
                 self.error("❌ Failed to parse release information")
@@ -190,19 +209,35 @@ class SlashCommand(BaseCommand):
         with tempfile.TemporaryDirectory() as temp_dir:
             try:
                 # Download the tarball using gh CLI with spinner
-                with SpinnerManager.network_operation("⬇️ Downloading latest release...") as status:
+                with SpinnerManager.network_operation(
+                    "⬇️ Downloading latest release..."
+                ):
                     tarball_path = os.path.join(temp_dir, "claude-slash.tar.gz")
                     subprocess.run(
-                        ["gh", "api", f"repos/jeremyeder/claude-slash/tarball/{latest_tag}"],
+                        [
+                            "gh",
+                            "api",
+                            f"repos/jeremyeder/claude-slash/tarball/{latest_tag}",
+                        ],
                         stdout=open(tarball_path, "wb"),
-                        check=True
+                        check=True,
                     )
 
                 # Extract the tarball with spinner
-                with SpinnerManager.file_operation("📦 Extracting release...") as status:
+                with SpinnerManager.file_operation(
+                    "📦 Extracting release..."
+                ):
                     subprocess.run(
-                        ["tar", "-xz", "-C", temp_dir, "--strip-components=1", "-f", tarball_path],
-                        check=True
+                        [
+                            "tar",
+                            "-xz",
+                            "-C",
+                            temp_dir,
+                            "--strip-components=1",
+                            "-f",
+                            tarball_path,
+                        ],
+                        check=True,
                     )
 
                 # Update commands with progress
@@ -213,7 +248,11 @@ class SlashCommand(BaseCommand):
                     new_files = list(Path(commands_source).glob("*.md"))
                     total_operations = len(old_files) + len(new_files)
 
-                    with track_operation("🔄 Updating commands...", total=total_operations, operation_type="file") as (progress, task):
+                    with track_operation(
+                        "🔄 Updating commands...",
+                        total=total_operations,
+                        operation_type="file",
+                    ) as (progress, task):
                         # Remove old commands
                         for md_file in old_files:
                             md_file.unlink()
@@ -262,7 +301,7 @@ class SlashCommand(BaseCommand):
                 ["git", "rev-parse", "--show-toplevel"],
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
             git_root = result.stdout.strip()
             commands_dir = os.path.join(git_root, ".claude", "commands")
@@ -313,7 +352,7 @@ class SlashCommand(BaseCommand):
             Extracted description or default text
         """
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 lines = f.readlines()
 
             # Try to get the first line after the title that contains descriptive text
@@ -351,11 +390,11 @@ class SlashCommand(BaseCommand):
             Extracted usage string or empty string
         """
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Look for usage in code blocks
-            lines = content.split('\n')
+            lines = content.split("\n")
             in_code_block = False
             for line in lines:
                 line = line.strip()
@@ -373,4 +412,5 @@ class SlashCommand(BaseCommand):
     def _get_timestamp(self) -> str:
         """Get a timestamp string for backup directories."""
         import datetime
+
         return datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
