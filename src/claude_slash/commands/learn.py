@@ -42,7 +42,14 @@ class LearnCommand(BaseCommand):
         """Return the help text for the command."""
         return ("Continuously refine the global CLAUDE.md file with impactful "
                 "learnings from the current session through an interactive "
-                "integration interface.")
+                "integration interface.\n\n"
+                "Examples:\n"
+                "  /learn                    # Start interactive learning session\n"
+                "  claude-slash learn        # Learn session (CLI mode)\n\n"
+                "Features:\n"
+                "• Analyzes current session context for insights\n"
+                "• Interactive integration into global CLAUDE.md\n"
+                "• Rich-formatted output with progress tracking")
     
     def __init__(self):
         """Initialize the learn command."""

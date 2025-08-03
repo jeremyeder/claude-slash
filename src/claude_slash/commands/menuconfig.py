@@ -556,7 +556,17 @@ class MenuconfigCommand(BaseCommand):
     @property
     def help_text(self) -> str:
         """Return the help text for the command."""
-        return "Interactive menuconfig-style editor for CLAUDE.md files"
+        return ("Interactive menuconfig-style TUI editor for CLAUDE.md files with "
+                "Linux kernel menuconfig look and feel.\n\n"
+                "Examples:\n"
+                "  /menuconfig                        # Edit project/global CLAUDE.md\n"
+                "  /menuconfig custom.md              # Edit specific file\n"
+                "  claude-slash menuconfig            # CLI mode\n\n"
+                "Features:\n"
+                "• Linux kernel menuconfig-inspired interface\n"
+                "• Navigate sections with keyboard shortcuts\n"
+                "• Toggle sections enabled/disabled\n"
+                "• Real-time preview and editing")
     
     def execute(self, **kwargs: Any) -> None:
         """
