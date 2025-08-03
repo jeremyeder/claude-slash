@@ -68,18 +68,13 @@ jobs:
       with:
         python-version: '3.13'
 
-    - name: Install uv
-      run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
-
     - name: Install dependencies
       run: |
-        echo "Installing dependencies with dev extras..."
-        uv sync --dev
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
         echo "Verifying pytest installation..."
-        uv run which pytest || echo "pytest not found in virtual environment"
-        uv run pytest --version || echo "pytest version check failed"
+        which pytest
+        pytest --version
 
     - name: Validate Python package structure
       run: |
@@ -92,11 +87,11 @@ jobs:
     - name: Run Python tests
       run: |
         echo "Running Python test suite..."
-        uv run pytest -v --tb=short
+        pytest -v --tb=short
         echo "✅ All tests passed"
 
     - name: Validate CLI functionality
       run: |
         echo "Testing CLI functionality..."
-        uv run claude-slash --help
+        claude-slash --help
         echo "✅ CLI functionality validated"
