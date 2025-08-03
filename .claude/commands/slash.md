@@ -23,21 +23,54 @@ The help mode dynamically scans the `.claude/commands/` directory to provide up-
 
 !# CLAUDE_OUTPUT_MODE: DIRECT_TERMINAL
 !# This command should output directly to terminal without Claude parsing or interpretation
-!
+
+!# Get git root for sourcing error utilities
+!git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "$(pwd)")
+!error_utils_path="$git_root/.claude/commands/error-utils.md"
+
+!# Source error handling utilities if available
+!if [ -f "$error_utils_path" ]; then
+!    # Extract and execute the shell functions from error-utils.md
+!    grep "^!" "$error_utils_path" | sed 's/^!//' | while IFS= read -r line; do
+!        eval "$line"
+!    done
+!    # Source the functions by executing them in current shell
+!    eval "$(grep "^!" "$error_utils_path" | sed 's/^!//')"
+!else
+!    # Fallback color definitions if error-utils.md not available
+!    RED='\033[0;31m'
+!    GREEN='\033[0;32m'
+!    YELLOW='\033[1;33m'
+!    BLUE='\033[0;34m'
+!    PURPLE='\033[0;35m'
+!    CYAN='\033[0;36m'
+!    NC='\033[0m' # No Color
+!    
+!    # Fallback error functions
+!    error_exit() { echo -e "${RED}❌ Error: $1${NC}" >&2; exit "${2:-1}"; }
+!    success() { echo -e "${GREEN}✅ $1${NC}"; }
+!    warning() { echo -e "${YELLOW}⚠️  Warning: $1${NC}" >&2; }
+!    info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
+!    safe_curl() { 
+!        local url="$1" output_file="$2" max_retries="${3:-3}" retry_count=0
+!        while [ $retry_count -lt $max_retries ]; do
+!            if [ -n "$output_file" ]; then
+!                curl -sSL "$url" -o "$output_file" 2>/dev/null && return 0
+!            else
+!                curl -sSL "$url" 2>/dev/null && return 0
+!            fi
+!            retry_count=$((retry_count + 1))
+!            [ $retry_count -lt $max_retries ] && sleep 2
+!        done
+!        error_exit "Network request failed after $max_retries attempts. Check your internet connection."
+!    }
+!fi
+
 !# Parse arguments for subcommand support
 !subcommand="${ARGUMENTS%% *}"  # Get first argument
 !if [ -z "$subcommand" ]; then
 !    subcommand="help"
 !fi
-
-!# Color definitions for better UX
-!RED='\033[0;31m'
-!GREEN='\033[0;32m'
-!YELLOW='\033[1;33m'
-!BLUE='\033[0;34m'
-!PURPLE='\033[0;35m'
-!CYAN='\033[0;36m'
-!NC='\033[0m' # No Color
 
 !# Handle update subcommand
 !if [ "$subcommand" = "update" ]; then
@@ -55,27 +88,20 @@ The help mode dynamically scans the `.claude/commands/` directory to provide up-
 !        install_dir="$HOME/.claude/commands"
 !        install_type="global"
 !    else
-!        echo "❌ No claude-slash installation found"
-!        echo "Run the installer first:"
-!        echo "curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh -o install.sh && bash install.sh"
-!        exit 1
+!        error_exit "No claude-slash installation found. Run the installer first:
+!curl -sSL https://raw.githubusercontent.com/jeremyeder/claude-slash/main/install.sh -o install.sh && bash install.sh"
 !    fi
 !
 !    echo "📍 Found $install_type installation at: $install_dir"
 !
 !    # Check for latest release
-!    echo "🔍 Checking latest release..."
-!    latest_info=$(curl -s "https://api.github.com/repos/jeremyeder/claude-slash/releases/latest")
-!    if [ $? -ne 0 ]; then
-!        echo "❌ Failed to check for updates (network error)"
-!        exit 1
-!    fi
+!    info "Checking latest release..."
+!    latest_info=$(safe_curl "https://api.github.com/repos/jeremyeder/claude-slash/releases/latest")
 !
 !    latest_tag=$(echo "$latest_info" | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
 !
 !    if [ -z "$latest_tag" ]; then
-!        echo "❌ Could not determine latest version"
-!        exit 1
+!        error_exit "Could not determine latest version from GitHub API response"
 !    fi
 !
 !    echo "📦 Latest release: $latest_tag"
@@ -91,14 +117,14 @@ The help mode dynamically scans the `.claude/commands/` directory to provide up-
 !
 !    download_url="https://api.github.com/repos/jeremyeder/claude-slash/tarball/$latest_tag"
 !    tarball_file="$temp_dir/claude-slash.tar.gz"
-!    curl -sL "$download_url" -o "$tarball_file"
-!    if [ $? -ne 0 ] || ! tar -xz -C "$temp_dir" --strip-components=1 -f "$tarball_file"; then
-!        echo "❌ Failed to download release"
-!        echo "🔄 Restoring from backup..."
+!    
+!    if ! safe_curl "$download_url" "$tarball_file" || ! tar -xz -C "$temp_dir" --strip-components=1 -f "$tarball_file"; then
+!        error_msg "Failed to download or extract release"
+!        info "Restoring from backup..."
 !        rm -rf "$install_dir"
 !        mv "$backup_dir" "$install_dir"
 !        rm -rf "$temp_dir"
-!        exit 1
+!        error_exit "Update failed, restored from backup"
 !    fi
 !
 !    # Update commands
@@ -111,23 +137,24 @@ The help mode dynamically scans the `.claude/commands/` directory to provide up-
 !        # Copy new commands
 !        cp "$temp_dir/.claude/commands/"*.md "$install_dir/"
 !
-!        echo "✅ Update completed successfully!"
-!        echo "📦 Updated to: $latest_tag"
-!        echo "📁 Backup saved to: $backup_dir"
-!        echo "🗑️  Remove backup with: rm -rf $backup_dir"
+!        success "Update completed successfully!"
+!        info "Updated to: $latest_tag"
+!        info "Backup saved to: $backup_dir"
+!        info "Remove backup with: rm -rf $backup_dir"
 !
 !    else
-!        echo "❌ Downloaded release doesn't contain command files"
-!        echo "🔄 Restoring from backup..."
+!        error_msg "Downloaded release doesn't contain command files"
+!        info "Restoring from backup..."
 !        rm -rf "$install_dir"
 !        mv "$backup_dir" "$install_dir"
+!        error_exit "Update failed, restored from backup"
 !    fi
 !
 !    # Cleanup
 !    rm -rf "$temp_dir"
 !
 !    echo
-!    echo "🎉 claude-slash commands updated successfully!"
+!    success "claude-slash commands updated successfully!"
 !    exit 0
 !fi
 
@@ -136,18 +163,15 @@ The help mode dynamically scans the `.claude/commands/` directory to provide up-
 !echo -e "${BLUE}=================================${NC}"
 !echo ""
 
-!# Get the commands directory
-!git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "$(pwd)")
+!# Get the commands directory (git_root already set above)
 !commands_dir="$git_root/.claude/commands"
 
 !# Check if commands directory exists
 !if [ ! -d "$commands_dir" ]; then
 !  commands_dir="$HOME/.claude/commands"
 !  if [ ! -d "$commands_dir" ]; then
-!    echo -e "${RED}❌ No claude-slash commands found${NC}"
-!    echo "Install commands by downloading and running install.sh from:"
-!    echo "https://github.com/jeremyeder/claude-slash"
-!    exit 1
+!    error_exit "No claude-slash commands found. Install commands by downloading and running install.sh from:
+!https://github.com/jeremyeder/claude-slash"
 !  fi
 !fi
 
