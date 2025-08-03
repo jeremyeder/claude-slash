@@ -24,7 +24,7 @@ Usage:
     /menuconfig                 # Configuration
 """
 
-__version__ = "1.2.1"
+__version__ = "1.5.0"
 __author__ = "Jeremy Eder"
 __email__ = "jeremyeder@users.noreply.github.com"
 

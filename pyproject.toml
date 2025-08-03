@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "claude-slash"
-version = "1.2.1"
+version = "1.5.0"
 description = "Python CLI tool for enhanced development workflows with Rich terminal UI and interactive commands"
 readme = "README.md"
 license = { text = "MIT" }
