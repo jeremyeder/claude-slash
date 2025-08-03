@@ -71,11 +71,15 @@ jobs:
     - name: Install uv
       run: |
         curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Install dependencies
       run: |
+        echo "Installing dependencies with dev extras..."
         uv sync --dev
+        echo "Verifying pytest installation..."
+        uv run which pytest || echo "pytest not found in virtual environment"
+        uv run pytest --version || echo "pytest version check failed"
 
     - name: Validate Python package structure
       run: |
