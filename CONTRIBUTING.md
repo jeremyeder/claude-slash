@@ -68,17 +68,17 @@ from .base import BaseCommand
 
 class MyCommand(BaseCommand):
     """Example command demonstrating the BaseCommand interface."""
-    
+
     @property
     def name(self) -> str:
         """Return the command name."""
         return "mycommand"
-    
+
     @property
     def help_text(self) -> str:
         """Return the help text for the command."""
         return "Example command with Rich formatting"
-    
+
     def execute(self, **kwargs: Any) -> None:
         """Execute the command."""
         self.console.print(
@@ -191,8 +191,8 @@ Before submitting a pull request:
 
 ### All Tests
 
-3. Ensure all GitHub Actions checks pass
-4. Test both Python CLI and Claude Code integration modes
+1. Ensure all GitHub Actions checks pass
+2. Test both Python CLI and Claude Code integration modes
 
 ## Code Review Process
 
