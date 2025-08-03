@@ -44,28 +44,15 @@ jobs:
     - name: Lint markdown files
       run: |
         echo "Linting markdown files..."
-        markdownlint --config .markdownlint.json *.md .claude/commands/*.md
+        markdownlint --config .markdownlint.json *.md
         echo "✅ Markdown linting complete"
 
     - name: Lint shell scripts with shellcheck
       run: |
         echo "Linting shell scripts with shellcheck..."
 
-        # Lint install script
-        shellcheck install.sh
-
-        # Lint test scripts
-        find tests -name "*.sh" -exec shellcheck {} \;
-
-        # Extract and lint shell commands from markdown files
-        for file in .claude/commands/*.md; do
-          echo "Checking shell commands in $file..."
-          grep "^!" "$file" | sed 's/^!//' > /tmp/shell_commands.sh || true
-          if [ -s /tmp/shell_commands.sh ]; then
-            echo "Running shellcheck on commands from $file..."
-            shellcheck /tmp/shell_commands.sh || echo "Warning: shellcheck issues in $file"
-          fi
-        done
+        # Lint remaining shell scripts in scripts directory
+        shellcheck scripts/*.sh
 
         echo "✅ Shell script linting complete"
 
@@ -75,97 +62,37 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Cache test files and dependencies
-      uses: actions/cache@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        path: |
-          .claude/commands
-          tests
-        key: ${{ runner.os }}-test-files-${{ hashFiles('.claude/commands/**', 'tests/**') }}
-        restore-keys: |
-          ${{ runner.os }}-test-files-
-    - name: Validate command files exist
+        python-version: '3.13'
+
+    - name: Install uv
       run: |
-        echo "Checking for required command files..."
-        test -f .claude/commands/slash.md || (echo "Missing slash.md" && exit 1)
-        test -f .claude/commands/learn.md || (echo "Missing learn.md" && exit 1)
-        test -f .claude/commands/menuconfig.md || (echo "Missing menuconfig.md" && exit 1)
-        echo "✅ All core command files present"
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-    - name: Validate markdown structure
+    - name: Install dependencies
       run: |
-        echo "Validating markdown structure..."
-        for file in .claude/commands/*.md; do
-          echo "Checking $file..."
-          # Check for required sections
-          grep -q "^# " "$file" || (echo "Missing title in $file" && exit 1)
-          grep -q "## Usage" "$file" || (echo "Missing Usage section in $file" && exit 1)
-          grep -q "## Implementation" "$file" || (echo "Missing Implementation section in $file" && exit 1)
-          echo "✅ $file structure valid"
-        done
+        uv sync
 
-    - name: Validate shell syntax
+    - name: Validate Python package structure
       run: |
-        echo "Validating shell syntax..."
-        for file in .claude/commands/*.md; do
-          echo "Checking shell commands in $file..."
-          # Extract shell commands (lines starting with !)
-          grep "^!" "$file" | sed 's/^!//' > /tmp/shell_commands.sh || true
-          if [ -s /tmp/shell_commands.sh ]; then
-            # Basic syntax check
-            bash -n /tmp/shell_commands.sh || (echo "Invalid shell syntax in $file" && exit 1)
-            echo "✅ Shell syntax valid in $file"
-          fi
-        done
+        echo "Checking Python package structure..."
+        test -f pyproject.toml || (echo "Missing pyproject.toml" && exit 1)
+        test -f src/claude_slash/__init__.py || (echo "Missing main package" && exit 1)
+        test -f src/claude_slash/main.py || (echo "Missing main.py" && exit 1)
+        echo "✅ Python package structure valid"
 
-    - name: Security check
+    - name: Run Python tests
       run: |
-        echo "Running security checks..."
-        for file in .claude/commands/*.md; do
-          echo "Checking $file for security issues..."
+        echo "Running Python test suite..."
+        uv run pytest -v --tb=short
+        echo "✅ All tests passed"
 
-          # Check for dangerous rm commands
-          if grep -q "rm -rf /" "$file"; then
-            echo "❌ Dangerous rm command found in $file"
-            exit 1
-          fi
-
-          # Check for dangerous sudo usage (not in documentation)
-          # Allow sudo in specific safe contexts: comments, error messages, and installation docs
-          # Block direct sudo command execution
-          if grep "^!sudo " "$file" || grep "^![[:space:]]*sudo " "$file"; then
-            echo "❌ Direct sudo command found in $file"
-            echo "   Direct sudo execution is not allowed in command implementations"
-            exit 1
-          fi
-
-          # Check for dangerous curl pipe to shell
-          if grep -q "curl.*|.*sh" "$file"; then
-            echo "❌ Dangerous curl pipe to shell found in $file"
-            exit 1
-          fi
-
-          echo "✅ $file security check passed"
-        done
-
-    - name: Test install script
+    - name: Validate CLI functionality
       run: |
-        echo "Testing install script..."
-        test -f install.sh || (echo "Missing install.sh" && exit 1)
-        test -x install.sh || (echo "install.sh not executable" && exit 1)
-        bash -n install.sh || (echo "Invalid shell syntax in install.sh" && exit 1)
-        echo "✅ Install script validation passed"
-
-    - name: Run tests
-      run: |
-        if [ -d tests ]; then
-          echo "Running test suite..."
-          for test_file in tests/*.sh; do
-            if [ -f "$test_file" ]; then
-              echo "Running $test_file..."
-              bash "$test_file"
-            fi
-          done
-        else
-          echo "No test directory found, skipping tests"
-        fi
+        echo "Testing CLI functionality..."
+        uv run claude-slash --help
+        echo "✅ CLI functionality validated"
