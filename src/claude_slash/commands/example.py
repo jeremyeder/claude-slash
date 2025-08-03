@@ -23,7 +23,15 @@ class ExampleCommand(BaseCommand):
     @property
     def help_text(self) -> str:
         """Return the help text for the command."""
-        return "Example command to test command discovery system"
+        return ("Example command to test command discovery system with Rich formatting.\n\n"
+                "Examples:\n"
+                "  /example                           # Default hello message\n"
+                "  /example --message \"Custom text\"   # Custom message\n"
+                "  claude-slash example               # CLI mode\n\n"
+                "This command demonstrates:\n"
+                "• BaseCommand inheritance\n"
+                "• Custom argument handling\n"
+                "• Rich-formatted success messages")
     
     def execute(self, **kwargs: Any) -> None:
         """

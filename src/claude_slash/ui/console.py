@@ -1,5 +1,22 @@
 """
 Console utilities for consistent Rich output across claude-slash commands.
+
+This module provides a shared Rich console instance and utility functions
+for progress tracking and spinner operations. All commands should use the
+shared console instance to ensure consistent formatting and behavior.
+
+Functions:
+- get_console(): Get the shared Rich console instance
+- with_progress(): Context manager for progress bar operations
+- with_spinner(): Context manager for spinner operations
+
+Usage:
+    console = get_console()
+    console.print("Hello, world!")
+    
+    with with_progress("Processing...") as progress:
+        # Long running operation
+        pass
 """
 
 import time
