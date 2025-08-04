@@ -41,9 +41,8 @@ claude-slash version
 # Get help for all commands
 claude-slash --help
 
-# Run specific commands (examples)
-claude-slash checkpoint session-1
-claude-slash restore session-1
+# Run available commands
+claude-slash --help
 ```
 
 ## Command Reference
