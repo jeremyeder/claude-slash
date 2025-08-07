@@ -28,6 +28,14 @@ class TestFastGitHubInitOptions(unittest.TestCase):
         self.assertIsNone(options.topics)
         self.assertFalse(options.create_website)
         self.assertTrue(options.enable_dependabot)  # Default enabled
+        
+        # Test new automation defaults
+        self.assertTrue(options.create_project)  # Default enabled
+        self.assertEqual(options.project_template, "development")  # Default template
+        self.assertTrue(options.enable_auto_version)  # Default enabled
+        self.assertTrue(options.enable_auto_merge)  # Default enabled
+        self.assertTrue(options.enable_auto_release)  # Default enabled
+        self.assertFalse(options.enable_claude_review)  # Default disabled
 
     def test_all_options(self):
         """Test all option combinations."""
@@ -75,6 +83,47 @@ class TestFastArgumentParsing(unittest.TestCase):
         """Test --create-website flag."""
         options = parse_arguments(["repo", "--create-website"])
         self.assertTrue(options.create_website)
+
+    def test_project_flags(self):
+        """Test GitHub project-related flags."""
+        # Test --no-project flag
+        options = parse_arguments(["repo", "--no-project"])
+        self.assertFalse(options.create_project)
+        
+        # Test --project-template flag
+        options = parse_arguments(["repo", "--project-template", "basic"])
+        self.assertEqual(options.project_template, "basic")
+        
+        # Test default project template
+        options = parse_arguments(["repo"])
+        self.assertEqual(options.project_template, "development")
+
+    def test_automation_flags(self):
+        """Test advanced automation flags."""
+        # Test --no-auto-version flag
+        options = parse_arguments(["repo", "--no-auto-version"])
+        self.assertFalse(options.enable_auto_version)
+        
+        # Test --no-auto-merge flag
+        options = parse_arguments(["repo", "--no-auto-merge"])
+        self.assertFalse(options.enable_auto_merge)
+        
+        # Test --enable-claude-review flag
+        options = parse_arguments(["repo", "--enable-claude-review"])
+        self.assertTrue(options.enable_claude_review)
+        
+        # Test --no-auto-release flag
+        options = parse_arguments(["repo", "--no-auto-release"])
+        self.assertFalse(options.enable_auto_release)
+
+    def test_automation_defaults(self):
+        """Test that automation features are enabled by default."""
+        options = parse_arguments(["repo"])
+        self.assertTrue(options.create_project)
+        self.assertTrue(options.enable_auto_version)
+        self.assertTrue(options.enable_auto_merge)
+        self.assertTrue(options.enable_auto_release)
+        self.assertFalse(options.enable_claude_review)  # Disabled by default
 
     def test_no_dependabot_flag(self):
         """Test --no-dependabot flag."""
@@ -250,6 +299,79 @@ class TestFastWorkflowGeneration(unittest.TestCase):
         self.assertIn("dotnet build", content)
         self.assertIn("dotnet test", content)
         self.assertIn("codecov", content)
+
+    def test_auto_version_workflow_content(self):
+        """Test auto-version workflow generation."""
+        command = GitHubInitCommand(GitHubInitOptions(
+            repo_name="test", enable_auto_version=True
+        ))
+        
+        with patch("builtins.open", mock_open()) as mock_file:
+            command._create_auto_version_workflow()
+            
+            # Verify workflow file is created
+            mock_file.assert_called_with(".github/workflows/auto-version.yml", "w")
+            
+            # Get the written content
+            written_content = mock_file().write.call_args[0][0]
+            self.assertIn("name: Auto Version", written_content)
+            self.assertIn("version increment", written_content.lower())
+            self.assertIn("workflow_dispatch", written_content)
+
+    def test_automerge_workflow_content(self):
+        """Test automerge workflow generation.""" 
+        command = GitHubInitCommand(GitHubInitOptions(
+            repo_name="test", enable_auto_merge=True
+        ))
+        
+        with patch("builtins.open", mock_open()) as mock_file:
+            command._create_automerge_workflow()
+            
+            # Verify workflow file is created
+            mock_file.assert_called_with(".github/workflows/automerge.yml", "w")
+            
+            # Get the written content
+            written_content = mock_file().write.call_args[0][0]
+            self.assertIn("name: Dependabot Auto-Merge", written_content)
+            self.assertIn("dependabot[bot]", written_content)
+            self.assertIn("gh pr review --approve", written_content)
+
+    def test_release_workflow_content(self):
+        """Test release workflow generation."""
+        command = GitHubInitCommand(GitHubInitOptions(
+            repo_name="test", enable_auto_release=True
+        ))
+        
+        with patch("builtins.open", mock_open()) as mock_file:
+            command._create_release_workflow()
+            
+            # Verify workflow file is created
+            mock_file.assert_called_with(".github/workflows/release.yml", "w")
+            
+            # Get the written content
+            written_content = mock_file().write.call_args[0][0]
+            self.assertIn("name: Release", written_content)
+            self.assertIn("tags:", written_content)
+            self.assertIn("v*.*.*", written_content)
+
+    def test_claude_review_workflows_content(self):
+        """Test Claude AI review workflow generation."""
+        command = GitHubInitCommand(GitHubInitOptions(
+            repo_name="test", enable_claude_review=True
+        ))
+        
+        with patch("builtins.open", mock_open()) as mock_file:
+            command._create_claude_review_workflows()
+            
+            # Verify both workflow files are created
+            expected_calls = [
+                ".github/workflows/claude-code-review.yml",
+                ".github/workflows/claude.yml"
+            ]
+            
+            actual_calls = [call[0][0] for call in mock_file.call_args_list]
+            for expected_call in expected_calls:
+                self.assertIn(expected_call, actual_calls)
 
 
 class TestFastFileCreation(unittest.TestCase):

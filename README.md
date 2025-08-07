@@ -6,13 +6,19 @@ A Python-based slash command for Claude that initializes and configures GitHub r
 
 - **Interactive Mode**: User-friendly prompts guide you through repository setup
 - **Security First**: Repositories are private by default
+- **GitHub Projects**: Repository-level project boards with customizable templates
+- **Advanced Automation**: Comprehensive GitHub Actions workflow suite
+  - **Auto-versioning**: Semantic versioning based on commit messages
+  - **Auto-merge**: Automatic Dependabot PR approval and merging
+  - **Auto-release**: Automated releases on tag creation
+  - **Claude AI Review**: Optional AI-powered code review (requires API key)
 - **CI/CD Ready**: Every repository includes GitHub Actions workflows
 - **Language-Specific**: CI templates adapt to your project type (Python, Node.js, etc.)
 - **Documentation**: Optional Docusaurus website with automatic deployment
 - **PR Previews**: Documentation preview deployments for pull requests
 - **Complete Setup**: Creates local repo, initial files, and GitHub remote
 - **Customizable**: Support for licenses, gitignore templates, and repo metadata
-- **Best Practices**: Follows GitHub conventions and includes proper documentation
+- **Best Practices**: Follows GitHub Flow and includes proper documentation
 
 ## Installation
 
@@ -74,11 +80,14 @@ Interactive mode guides you through:
   --gitignore=python \
   --topics=python,api,fastapi \
   --branch=develop \
-  --create-website
+  --create-website \
+  --project-template=release \
+  --enable-claude-review
 ```
 
 ### Options
 
+#### Basic Options
 - `--interactive, -i` - Use interactive mode with prompts
 - `--public` - Create a public repository (default: private)
 - `--desc=<description>` - Repository description
@@ -88,6 +97,17 @@ Interactive mode guides you through:
 - `--topics=<list>` - Comma-separated repository topics
 - `--no-readme` - Skip README creation
 - `--create-website` - Initialize a Docusaurus documentation website
+
+#### GitHub Projects
+- `--no-project` - Disable GitHub project creation (enabled by default)
+- `--project-template=<type>` - Project template: basic, development, release (default: development)
+
+#### Automation Options
+- `--no-auto-version` - Disable automatic semantic versioning (enabled by default)
+- `--no-auto-merge` - Disable Dependabot auto-merge (enabled by default)
+- `--no-auto-release` - Disable automatic releases (enabled by default)
+- `--enable-claude-review` - Enable Claude AI code review (requires ANTHROPIC_API_KEY)
+- `--no-dependabot` - Disable Dependabot configuration (enabled by default)
 
 ## Claude Integration
 

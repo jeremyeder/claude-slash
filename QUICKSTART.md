@@ -21,6 +21,9 @@ You'll be prompted for:
 - Branch name
 - Topics
 - Documentation website
+- GitHub project board configuration
+- Advanced automation options (versioning, auto-merge, releases)
+- Claude AI code review (optional)
 - Dependabot configuration
 
 ### 2. Command Line Mode
@@ -62,8 +65,13 @@ Every repository includes:
 
 ### 🔧 Automation
 - **CI Pipeline** that runs on every PR and push
+- **Auto-versioning** using semantic versioning from commit messages
+- **Auto-merge** for Dependabot PRs after CI passes
+- **Auto-release** creation when version tags are pushed
+- **GitHub Project board** with customizable workflow templates
 - **Dependabot** for automatic dependency updates  
 - **Code quality** checks (linting, testing, type checking)
+- **Claude AI code review** (optional, requires API key)
 
 ### 🌐 Documentation (Optional)
 - **Docusaurus website** with modern documentation
@@ -133,6 +141,7 @@ Every repository includes:
 
 ## 📋 All Available Options
 
+### Basic Options
 | Flag | Description | Default |
 |------|-------------|---------|
 | `--interactive, -i` | Use interactive guided setup | Auto when no repo name |
@@ -144,6 +153,20 @@ Every repository includes:
 | `--branch=NAME` | Default branch name | main |
 | `--topics=list` | Comma-separated topics | None |
 | `--create-website` | Initialize Docusaurus docs | Disabled |
+
+### GitHub Projects
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--no-project` | Disable GitHub project creation | Enabled |
+| `--project-template=TYPE` | Project template (basic, development, release) | development |
+
+### Automation Options
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--no-auto-version` | Disable automatic semantic versioning | Enabled |
+| `--no-auto-merge` | Disable Dependabot auto-merge | Enabled |
+| `--no-auto-release` | Disable automatic releases | Enabled |
+| `--enable-claude-review` | Enable Claude AI code review | Disabled |
 | `--no-dependabot` | Disable dependency updates | Enabled |
 
 ## 🔧 Prerequisites
@@ -157,6 +180,9 @@ brew install gh
 
 # Authenticate with GitHub
 gh auth login
+
+# For GitHub Projects support, add project scope
+gh auth refresh --scopes project
 
 # Git (usually pre-installed)
 git --version
@@ -196,7 +222,32 @@ node --version
 ./github_init_command.py quick-proto \
   --desc="Rapid prototype for feature X" \
   --gitignore=general \
-  --no-dependabot
+  --no-dependabot \
+  --no-project \
+  --no-auto-version
+```
+
+### Enterprise Project with Full Automation
+```bash
+./github_init_command.py enterprise-suite \
+  --desc="Production enterprise application" \
+  --license=Apache-2.0 \
+  --gitignore=python \
+  --topics=enterprise,production,api \
+  --project-template=release \
+  --enable-claude-review
+```
+
+### Open Source Library with AI Review
+```bash
+./github_init_command.py my-open-lib \
+  --public \
+  --desc="Community-driven open source library" \
+  --license=MIT \
+  --gitignore=python \
+  --topics=library,opensource,community \
+  --enable-claude-review \
+  --create-website
 ```
 
 ## 🐛 Troubleshooting
