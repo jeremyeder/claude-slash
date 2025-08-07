@@ -29,6 +29,16 @@ class GitHubInitOptions:
     create_website: bool = False
     enable_dependabot: bool = True  # Default to enabled
     dry_run: bool = False  # Preview mode without execution
+    
+    # GitHub Projects
+    create_project: bool = True  # Repository-level by default
+    project_template: str = "development"  # basic, development, release
+    
+    # Advanced GitHub Automation  
+    enable_auto_version: bool = True   # Semantic versioning
+    enable_auto_merge: bool = True     # Dependabot auto-merge
+    enable_claude_review: bool = False # AI code review (requires token)
+    enable_auto_release: bool = True   # Automated releases
 
 
 class GitHubInitCommand:
@@ -69,10 +79,14 @@ class GitHubInitCommand:
             # Step 5: Create GitHub repository
             self._create_github_repo()
 
-            # Step 6: Configure repository settings
+            # Step 6: Create GitHub project if requested
+            if self.options.create_project:
+                self._create_github_project()
+
+            # Step 7: Configure repository settings
             self._configure_repo()
 
-            # Step 7: Initial commit and push
+            # Step 8: Initial commit and push
             self._commit_and_push()
 
             print(f"✅ Successfully initialized repository: {self.options.repo_name}")
@@ -98,6 +112,11 @@ class GitHubInitCommand:
         print(f"🏷️  Topics: {', '.join(self.options.topics) if self.options.topics else 'None'}")
         print(f"🌐 Website: {'Yes' if self.options.create_website else 'No'}")
         print(f"🤖 Dependabot: {'Yes' if self.options.enable_dependabot else 'No'}")
+        print(f"📋 GitHub Project: {'Yes' if self.options.create_project else 'No'} ({self.options.project_template} template)")
+        print(f"🔄 Auto-versioning: {'Yes' if self.options.enable_auto_version else 'No'}")
+        print(f"🚀 Auto-merge: {'Yes' if self.options.enable_auto_merge else 'No'}")
+        print(f"🤖 Claude review: {'Yes' if self.options.enable_claude_review else 'No'}")
+        print(f"📦 Auto-release: {'Yes' if self.options.enable_auto_release else 'No'}")
         
         print("\n📝 Files that would be created:")
         files_to_create = []
@@ -204,6 +223,25 @@ class GitHubInitCommand:
             print("✅ GitHub API access confirmed")
         except subprocess.CalledProcessError:
             raise RuntimeError("❌ Cannot access GitHub API. Check your authentication and permissions.")
+        
+        # Check project permissions if project creation is enabled
+        if self.options.create_project:
+            try:
+                # Test project access by trying to list projects (should work with project scope)
+                result = subprocess.run(
+                    ["gh", "project", "list", "--owner", "@me"],
+                    capture_output=True,
+                    text=True,
+                    check=True
+                )
+                print("✅ GitHub Projects access confirmed")
+            except subprocess.CalledProcessError as e:
+                if "insufficient" in e.stderr.lower() or "scope" in e.stderr.lower():
+                    print("⚠️  GitHub CLI lacks project permissions")
+                    print("⚠️  Run 'gh auth refresh --scopes project' to add project access")
+                    print("⚠️  Project creation will be skipped")
+                else:
+                    print("⚠️  Project access check failed - project creation may not work")
         
         # Check for Node.js if website creation is requested
         if self.options.create_website:
@@ -641,6 +679,19 @@ Thumbs.db
         if self.options.create_website:
             self._create_docusaurus_deploy_workflow()
             self._create_pr_preview_workflow()
+
+        # Create advanced automation workflows
+        if self.options.enable_auto_version:
+            self._create_auto_version_workflow()
+            
+        if self.options.enable_auto_merge:
+            self._create_automerge_workflow()
+            
+        if self.options.enable_auto_release:
+            self._create_release_workflow()
+            
+        if self.options.enable_claude_review:
+            self._create_claude_review_workflows()
 
         # Create dependabot configuration if enabled
         if self.options.enable_dependabot:
@@ -1231,6 +1282,327 @@ jobs:
 
         with open(".github/workflows/pr-preview.yml", "w") as f:
             f.write(preview_content)
+
+    def _create_auto_version_workflow(self) -> None:
+        """Create automatic semantic versioning workflow."""
+        version_content = """name: Auto Version
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version increment type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    if: "!contains(github.event.head_commit.message, 'Bump version to')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine version increment
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "increment=${{ github.event.inputs.version_type }}" >> $GITHUB_OUTPUT
+          else
+            commit_msg="${{ github.event.head_commit.message }}"
+            if [[ $commit_msg =~ ^(feat!|fix!|chore!): ]] || [[ $commit_msg =~ BREAKING.CHANGE ]]; then
+              echo "increment=major" >> $GITHUB_OUTPUT
+            elif [[ $commit_msg =~ ^feat: ]]; then
+              echo "increment=minor" >> $GITHUB_OUTPUT
+            elif [[ $commit_msg =~ ^(fix|docs|style|refactor|test|chore): ]]; then
+              echo "increment=patch" >> $GITHUB_OUTPUT
+            else
+              echo "increment=none" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Get current version
+        id: current
+        run: |
+          if git tag -l | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1 > /dev/null 2>&1; then
+            current_version=$(git tag -l | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+          else
+            current_version="v0.0.0"
+          fi
+          echo "version=$current_version" >> $GITHUB_OUTPUT
+
+      - name: Calculate new version
+        id: new
+        run: |
+          current_version="${{ steps.current.outputs.version }}"
+          increment="${{ steps.version.outputs.increment }}"
+          
+          if [ "$increment" = "none" ]; then
+            echo "No version increment needed"
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Remove 'v' prefix for calculation
+          version_num=${current_version#v}
+          IFS='.' read -ra VERSION_PARTS <<< "$version_num"
+          
+          major=${VERSION_PARTS[0]:-0}
+          minor=${VERSION_PARTS[1]:-0}
+          patch=${VERSION_PARTS[2]:-0}
+          
+          case $increment in
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            patch)
+              patch=$((patch + 1))
+              ;;
+          esac
+          
+          new_version="v$major.$minor.$patch"
+          echo "version=$new_version" >> $GITHUB_OUTPUT
+          echo "skip=false" >> $GITHUB_OUTPUT
+
+      - name: Update version and create tag
+        if: steps.new.outputs.skip != 'true'
+        run: |
+          new_version="${{ steps.new.outputs.version }}"
+          
+          # Create and push tag
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git tag -a "$new_version" -m "Bump version to $new_version"
+          git push origin "$new_version"
+          
+          echo "✅ Version bumped to $new_version"
+
+      - name: Create release
+        if: steps.new.outputs.skip != 'true' && github.event.inputs.version_type == ''
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.new.outputs.version }}
+          release_name: Release ${{ steps.new.outputs.version }}
+          draft: false
+          prerelease: false
+"""
+
+        with open(".github/workflows/auto-version.yml", "w") as f:
+            f.write(version_content)
+
+    def _create_automerge_workflow(self) -> None:
+        """Create Dependabot auto-merge workflow."""
+        automerge_content = """name: Dependabot Auto-Merge
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v1
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Wait for CI to complete
+        uses: fountainhead/action-wait-for-check@v1.1.0
+        id: wait-for-ci
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: CI
+          ref: ${{ github.event.pull_request.head.sha }}
+          timeoutSeconds: 600
+          intervalSeconds: 30
+
+      - name: Auto-approve PR
+        if: steps.wait-for-ci.outputs.conclusion == 'success'
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge for Dependabot PRs
+        if: steps.wait-for-ci.outputs.conclusion == 'success'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+"""
+
+        with open(".github/workflows/automerge.yml", "w") as f:
+            f.write(automerge_content)
+
+    def _create_release_workflow(self) -> None:
+        """Create automated release workflow."""
+        release_content = """name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag format
+        run: |
+          if [[ ! "${{ github.ref_name }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid tag format: ${{ github.ref_name }}"
+            echo "Expected format: vX.Y.Z"
+            exit 1
+          fi
+
+      - name: Extract release info
+        id: release_info
+        run: |
+          tag="${{ github.ref_name }}"
+          version="${tag#v}"
+          
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "is_prerelease=false" >> $GITHUB_OUTPUT
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # Get previous tag
+          previous_tag=$(git tag -l "v*.*.*" --sort=-version:refname | head -2 | tail -1)
+          if [ -z "$previous_tag" ]; then
+            previous_tag=$(git rev-list --max-parents=0 HEAD)
+          fi
+          
+          # Generate changelog
+          echo "## What's Changed" > release_notes.md
+          echo "" >> release_notes.md
+          
+          # Get commits since previous tag
+          git log $previous_tag..${{ github.ref_name }} --oneline --pretty=format:"* %s (%h)" >> release_notes.md
+          
+          echo "" >> release_notes.md
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$previous_tag...${{ github.ref_name }}" >> release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag }}
+          name: Release ${{ steps.release_info.outputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ steps.release_info.outputs.is_prerelease }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+"""
+
+        with open(".github/workflows/release.yml", "w") as f:
+            f.write(release_content)
+
+    def _create_claude_review_workflows(self) -> None:
+        """Create Claude AI code review workflows."""
+        # Only create if Claude review is explicitly enabled
+        claude_review_content = """name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude Code Review
+        uses: antropic/claude-code-review@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          max_turns: 3
+          timeout: 300
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+"""
+
+        claude_integration_content = """name: Claude Integration
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  claude:
+    if: contains(github.event.comment.body, '@claude') && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Claude Response
+        uses: antropic/claude-github@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+"""
+
+        with open(".github/workflows/claude-code-review.yml", "w") as f:
+            f.write(claude_review_content)
+            
+        with open(".github/workflows/claude.yml", "w") as f:
+            f.write(claude_integration_content)
 
     def _create_dependabot_config(self) -> None:
         """Create dependabot configuration for automatic dependency updates."""
@@ -1935,6 +2307,77 @@ yarn-error.log*
             except subprocess.CalledProcessError as e:
                 print(f"⚠️  Could not add topics to repository: {e}")
 
+    def _create_github_project(self) -> None:
+        """Create repository-level GitHub project with standard setup."""
+        print("📋 Creating GitHub project...")
+        
+        try:
+            # Create repository-level project
+            cmd = [
+                "gh", "project", "create", 
+                "--title", f"{self.options.repo_name} Project",
+                "--body", f"Project board for {self.options.repo_name}",
+                "--repository", self.options.repo_name
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            project_url = result.stdout.strip()
+            
+            print(f"✅ Repository-level GitHub project created: {project_url}")
+            
+            # Configure project based on template
+            self._configure_project_template()
+            
+        except subprocess.CalledProcessError as e:
+            # Check if it's a scope issue
+            if "insufficient" in e.stderr.lower() or "scope" in e.stderr.lower():
+                print("⚠️  GitHub CLI lacks project permissions. Run 'gh auth refresh --scopes project' to add project access.")
+                print("⚠️  Project creation skipped - repository created successfully without project board.")
+            else:
+                print(f"⚠️  Could not create GitHub project: {e.stderr}")
+                print("⚠️  Project creation skipped - repository created successfully without project board.")
+
+    def _configure_project_template(self) -> None:
+        """Configure project fields and views based on template."""
+        try:
+            if self.options.project_template == "basic":
+                # Basic template: Simple status tracking
+                self._add_project_field("Status", "single_select", ["Backlog", "In Progress", "Done"])
+                
+            elif self.options.project_template == "development":
+                # Development template: Status + Priority + Sprint
+                self._add_project_field("Status", "single_select", ["Backlog", "In Progress", "In Review", "Done"])
+                self._add_project_field("Priority", "single_select", ["High", "Medium", "Low"])
+                self._add_project_field("Sprint", "iteration", [])
+                
+            elif self.options.project_template == "release":
+                # Release template: Status + Priority + Target Date + Milestone
+                self._add_project_field("Status", "single_select", ["Backlog", "In Progress", "In Review", "Ready for Release", "Released"])
+                self._add_project_field("Priority", "single_select", ["High", "Medium", "Low"])
+                self._add_project_field("Target Date", "date", [])
+                self._add_project_field("Milestone", "single_select", ["v1.0", "v1.1", "v2.0", "Future"])
+            
+            print(f"✅ Project configured with {self.options.project_template} template")
+            
+        except subprocess.CalledProcessError:
+            print("⚠️  Could not configure project template - using default configuration")
+
+    def _add_project_field(self, field_name: str, field_type: str, options: list) -> None:
+        """Add a custom field to the project."""
+        try:
+            cmd = ["gh", "project", "field-create", "--repository", self.options.repo_name, "--name", field_name, "--data-type", field_type]
+            
+            if options and field_type == "single_select":
+                # Add options for single_select fields
+                for option in options:
+                    cmd.extend(["--single-select-option", option])
+            
+            subprocess.run(cmd, capture_output=True, text=True, check=True)
+            
+        except subprocess.CalledProcessError:
+            # Field creation might fail if field already exists or other issues
+            pass
+
     def _commit_and_push(self) -> None:
         """Create initial commit and push to remote."""
         print("📤 Creating initial commit and pushing...")
@@ -1970,7 +2413,9 @@ def load_config_defaults() -> Dict[str, any]:
         # Validate configuration keys
         valid_keys = {
             'description', 'private', 'license', 'gitignore', 'readme', 
-            'default_branch', 'topics', 'create_website', 'enable_dependabot'
+            'default_branch', 'topics', 'create_website', 'enable_dependabot',
+            'create_project', 'project_template', 'enable_auto_version',
+            'enable_auto_merge', 'enable_claude_review', 'enable_auto_release'
         }
         
         # Filter out invalid keys and warn
@@ -2129,6 +2574,117 @@ def get_interactive_options() -> GitHubInitOptions:
     if not enable_dependabot:
         dependabot = default_dependabot
 
+    # GitHub Projects configuration
+    default_create_project = config.get('create_project', True)
+    project_default = "Y/n" if default_create_project else "y/N"
+    while True:
+        create_project_input = (
+            input(f"Create GitHub project board? ({project_default}): ").strip().lower()
+        )
+        if create_project_input in ["", "y", "yes"]:
+            create_project = True
+            break
+        elif create_project_input in ["n", "no"]:
+            create_project = False
+            break
+        print("Please enter 'y' for yes or 'n' for no.")
+    
+    # Apply default if no input provided
+    if not create_project_input:
+        create_project = default_create_project
+
+    # Project template selection (only if creating project)
+    project_template = "development"  # default
+    if create_project:
+        default_template = config.get('project_template', 'development')
+        print(f"\nProject templates:")
+        print("  basic      - Simple status tracking (Backlog → In Progress → Done)")  
+        print("  development - Status + Priority + Sprint fields")
+        print("  release    - Status + Priority + Target Date + Milestone")
+        template_prompt = f"Project template ({default_template}): "
+        while True:
+            template_input = input(template_prompt).strip()
+            if not template_input or template_input in ["basic", "development", "release"]:
+                project_template = template_input if template_input else default_template
+                break
+            print("Please enter: basic, development, release, or leave empty for default.")
+
+    # Advanced automation options
+    print("\n🚀 Advanced Automation Options:")
+    
+    # Auto-versioning
+    default_auto_version = config.get('enable_auto_version', True)
+    version_default = "Y/n" if default_auto_version else "y/N"
+    while True:
+        auto_version_input = (
+            input(f"Enable automatic semantic versioning? ({version_default}): ").strip().lower()
+        )
+        if auto_version_input in ["", "y", "yes"]:
+            auto_version = True
+            break
+        elif auto_version_input in ["n", "no"]:
+            auto_version = False
+            break
+        print("Please enter 'y' for yes or 'n' for no.")
+    
+    if not auto_version_input:
+        auto_version = default_auto_version
+
+    # Auto-merge
+    default_auto_merge = config.get('enable_auto_merge', True)
+    merge_default = "Y/n" if default_auto_merge else "y/N"
+    while True:
+        auto_merge_input = (
+            input(f"Enable Dependabot auto-merge? ({merge_default}): ").strip().lower()
+        )
+        if auto_merge_input in ["", "y", "yes"]:
+            auto_merge = True
+            break
+        elif auto_merge_input in ["n", "no"]:
+            auto_merge = False
+            break
+        print("Please enter 'y' for yes or 'n' for no.")
+    
+    if not auto_merge_input:
+        auto_merge = default_auto_merge
+
+    # Auto-release
+    default_auto_release = config.get('enable_auto_release', True)
+    release_default = "Y/n" if default_auto_release else "y/N"
+    while True:
+        auto_release_input = (
+            input(f"Enable automatic releases? ({release_default}): ").strip().lower()
+        )
+        if auto_release_input in ["", "y", "yes"]:
+            auto_release = True
+            break
+        elif auto_release_input in ["n", "no"]:
+            auto_release = False
+            break
+        print("Please enter 'y' for yes or 'n' for no.")
+    
+    if not auto_release_input:
+        auto_release = default_auto_release
+
+    # Claude review (optional, requires API key)
+    default_claude_review = config.get('enable_claude_review', False)
+    claude_default = "Y/n" if default_claude_review else "y/N"
+    while True:
+        claude_review_input = (
+            input(f"Enable Claude AI code review? ({claude_default}): ").strip().lower()
+        )
+        if claude_review_input in ["", "n", "no"]:
+            claude_review = False
+            break
+        elif claude_review_input in ["y", "yes"]:
+            claude_review = True
+            print("⚠️  Note: Claude AI review requires ANTHROPIC_API_KEY secret to be set in the repository")
+            break
+        print("Please enter 'y' for yes or 'n' for no.")
+    
+    if not claude_review_input:
+        claude_review = default_claude_review
+
     options = GitHubInitOptions(
         repo_name=repo_name,
         description=description,
@@ -2141,6 +2697,16 @@ def get_interactive_options() -> GitHubInitOptions:
         create_website=website,
         enable_dependabot=dependabot,
         dry_run=False,  # Interactive mode doesn't use dry-run
+        
+        # GitHub Projects
+        create_project=create_project,
+        project_template=project_template,
+        
+        # Advanced automation
+        enable_auto_version=auto_version,
+        enable_auto_merge=auto_merge,
+        enable_claude_review=claude_review,
+        enable_auto_release=auto_release,
     )
 
     # Show preview
@@ -2157,6 +2723,11 @@ def get_interactive_options() -> GitHubInitOptions:
     print(f"Topics: {', '.join(options.topics) if options.topics else 'None'}")
     print(f"Website: {'Yes' if options.create_website else 'No'}")
     print(f"Dependabot: {'Yes' if options.enable_dependabot else 'No'}")
+    print(f"GitHub Project: {'Yes' if options.create_project else 'No'} ({options.project_template} template)")
+    print(f"Auto-versioning: {'Yes' if options.enable_auto_version else 'No'}")
+    print(f"Auto-merge: {'Yes' if options.enable_auto_merge else 'No'}")
+    print(f"Claude review: {'Yes' if options.enable_claude_review else 'No'}")
+    print(f"Auto-release: {'Yes' if options.enable_auto_release else 'No'}")
 
     # Confirm
     while True:
@@ -2229,6 +2800,41 @@ def parse_arguments(args: List[str]) -> GitHubInitOptions:
         action="store_true",
         help="Preview changes without executing (dry run mode)",
     )
+    
+    # GitHub Projects options
+    parser.add_argument(
+        "--no-project",
+        action="store_true",
+        help="Disable GitHub project creation (enabled by default)",
+    )
+    parser.add_argument(
+        "--project-template",
+        choices=["basic", "development", "release"],
+        default="development",
+        help="GitHub project template (default: development)",
+    )
+    
+    # Advanced automation options
+    parser.add_argument(
+        "--no-auto-version",
+        action="store_true",
+        help="Disable automatic semantic versioning (enabled by default)",
+    )
+    parser.add_argument(
+        "--no-auto-merge",
+        action="store_true",
+        help="Disable automatic Dependabot PR merging (enabled by default)",
+    )
+    parser.add_argument(
+        "--enable-claude-review",
+        action="store_true",
+        help="Enable Claude AI code review (requires ANTHROPIC_API_KEY)",
+    )
+    parser.add_argument(
+        "--no-auto-release",
+        action="store_true",
+        help="Disable automatic releases on tag creation (enabled by default)",
+    )
 
     parsed = parser.parse_args(args)
 
@@ -2251,6 +2857,16 @@ def parse_arguments(args: List[str]) -> GitHubInitOptions:
         create_website=parsed.create_website or config.get('create_website', False),
         enable_dependabot=not parsed.no_dependabot if parsed.no_dependabot else config.get('enable_dependabot', True),
         dry_run=parsed.dry_run,
+        
+        # GitHub Projects
+        create_project=not parsed.no_project if parsed.no_project else config.get('create_project', True),
+        project_template=parsed.project_template or config.get('project_template', 'development'),
+        
+        # Advanced automation
+        enable_auto_version=not parsed.no_auto_version if parsed.no_auto_version else config.get('enable_auto_version', True),
+        enable_auto_merge=not parsed.no_auto_merge if parsed.no_auto_merge else config.get('enable_auto_merge', True),
+        enable_claude_review=parsed.enable_claude_review or config.get('enable_claude_review', False),
+        enable_auto_release=not parsed.no_auto_release if parsed.no_auto_release else config.get('enable_auto_release', True),
     )
 
 
