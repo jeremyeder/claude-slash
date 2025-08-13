@@ -42,6 +42,7 @@ class GitHubInitOptions:
     enable_auto_merge: bool = True
     enable_claude_review: bool = False
     enable_auto_release: bool = True
+    enable_branch_protection: bool = True
 
 
 class GitHubInitialization:
@@ -91,7 +92,11 @@ class GitHubInitialization:
             # Step 8: Configure advanced automation
             self._configure_automation()
 
-            # Step 9: Initial commit and push
+            # Step 9: Setup branch protection if enabled
+            if self.options.enable_branch_protection:
+                self._setup_branch_protection()
+
+            # Step 10: Initial commit and push
             self._initial_commit_and_push()
 
             print(f"✅ Repository '{self.options.repo_name}' initialized successfully!")
@@ -308,22 +313,22 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         if [ -f requirements-test.txt ]; then pip install -r requirements-test.txt; fi
-    
+
     - name: Run tests
       run: pytest
 """
@@ -661,15 +666,15 @@ jobs:
               repo,
               issue_number: number
             });
-            
+
             const labels = issue.data.labels.map(l => l.name);
             const hasOutcome = labels.includes('outcome');
             const hasEpic = labels.includes('epic');
             const hasStory = labels.includes('story');
-            
+
             // Validate hierarchy rules
             const hierarchyCount = [hasOutcome, hasEpic, hasStory].filter(Boolean).length;
-            
+
             if (hierarchyCount > 1) {
               await github.rest.issues.createComment({
                 owner,
@@ -693,25 +698,25 @@ jobs:
               repo,
               issue_number: number
             });
-            
+
             const labels = issue.data.labels.map(l => l.name);
             const isEpic = labels.includes('epic');
-            
+
             if (isEpic && issue.data.body) {
               // Look for parent outcome reference in the body
               const outcomeMatch = issue.data.body.match(/\\*\\*Parent Outcome:\\*\\* #(\\d+)/);
               if (outcomeMatch) {
                 const outcomeNumber = parseInt(outcomeMatch[1]);
-                
+
                 // Get all epics for this outcome
                 const epics = await github.rest.search.issuesAndPullRequests({
                   q: `repo:${owner}/${repo} is:issue label:epic "Parent Outcome: #${outcomeNumber}"`
                 });
-                
+
                 const totalEpics = epics.data.total_count;
                 const closedEpics = epics.data.items.filter(epic => epic.state === 'closed').length;
                 const progressPercent = totalEpics > 0 ? Math.round((closedEpics / totalEpics) * 100) : 0;
-                
+
                 // Comment on outcome with progress update
                 await github.rest.issues.createComment({
                   owner,
@@ -740,31 +745,31 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo;
-            
+
             // Get all outcomes
             const outcomes = await github.rest.search.issuesAndPullRequests({
               q: `repo:${owner}/${repo} is:issue label:outcome`
             });
-            
+
             let metricsReport = `# 📊 Outcome Metrics Report\\n\\n`;
             metricsReport += `*Generated: ${new Date().toISOString().split('T')[0]}*\\n\\n`;
             metricsReport += `## Summary\\n\\n`;
             metricsReport += `- **Total Outcomes**: ${outcomes.data.total_count}\\n`;
-            
+
             let completedOutcomes = 0;
             let activeOutcomes = 0;
             let plannedOutcomes = 0;
-            
+
             for (const outcome of outcomes.data.items) {
               // Get epics for this outcome
               const epics = await github.rest.search.issuesAndPullRequests({
                 q: `repo:${owner}/${repo} is:issue label:epic "Parent Outcome: #${outcome.number}"`
               });
-              
+
               const totalEpics = epics.data.total_count;
               const closedEpics = epics.data.items.filter(epic => epic.state === 'closed').length;
               const progressPercent = totalEpics > 0 ? Math.round((closedEpics / totalEpics) * 100) : 0;
-              
+
               if (progressPercent === 100) {
                 completedOutcomes++;
               } else if (progressPercent > 0) {
@@ -772,24 +777,24 @@ jobs:
               } else {
                 plannedOutcomes++;
               }
-              
+
               metricsReport += `\\n## ${outcome.title}\\n`;
               metricsReport += `- **Progress**: ${closedEpics}/${totalEpics} epics (${progressPercent}%)\\n`;
               metricsReport += `- **Status**: ${outcome.state}\\n`;
               metricsReport += `- **Link**: [#${outcome.number}](${outcome.html_url})\\n`;
             }
-            
+
             metricsReport += `\\n## Overall Status\\n`;
             metricsReport += `- **Completed**: ${completedOutcomes}\\n`;
             metricsReport += `- **Active**: ${activeOutcomes}\\n`;
             metricsReport += `- **Planned**: ${plannedOutcomes}\\n`;
-            
+
             // Create or update metrics issue
             try {
               const existingIssue = await github.rest.search.issuesAndPullRequests({
                 q: `repo:${owner}/${repo} is:issue in:title "Outcome Metrics Dashboard"`
               });
-              
+
               if (existingIssue.data.total_count > 0) {
                 // Update existing dashboard issue
                 await github.rest.issues.update({
@@ -850,6 +855,45 @@ updates:
             f.write(dependabot_config)
         self.created_files.append(".github/dependabot.yml")
 
+    def _setup_branch_protection(self) -> None:
+        """Setup branch protection rules for the main branch."""
+        print("🛡️ Setting up branch protection rules...")
+
+        user = self._get_github_user()
+        repo_full_name = f"{user}/{self.options.repo_name}"
+
+        try:
+            # Create branch protection rule using GitHub CLI
+            cmd = [
+                "gh",
+                "api",
+                "--method",
+                "PUT",
+                f"/repos/{repo_full_name}/branches/{self.options.default_branch}/protection",
+                "--field",
+                'required_status_checks={"strict":true,"checks":[]}',
+                "--field",
+                "enforce_admins=false",
+                "--field",
+                'required_pull_request_reviews={"required_approving_review_count":1,"dismiss_stale_reviews":true,"require_code_owner_reviews":false}',
+                "--field",
+                "restrictions=null",
+                "--field",
+                "allow_force_pushes=false",
+                "--field",
+                "allow_deletions=false",
+            ]
+
+            result = subprocess.run(cmd, capture_output=True, text=True)
+
+            if result.returncode == 0:
+                print("✅ Branch protection rules configured successfully")
+            else:
+                print(f"⚠️ Warning: Could not set up branch protection: {result.stderr}")
+
+        except Exception as e:
+            print(f"⚠️ Warning: Failed to setup branch protection: {e}")
+
     def _configure_automation(self) -> None:
         """Configure advanced GitHub automation."""
         if self.options.enable_auto_version:
@@ -897,6 +941,9 @@ updates:
         print(f"🌐 Website: {'✓' if self.options.create_website else '✗'}")
         print(f"📋 Project board: {'✓' if self.options.create_project else '✗'}")
         print(f"🤖 Dependabot: {'✓' if self.options.enable_dependabot else '✗'}")
+        print(
+            f"🛡️ Branch protection: {'✓' if self.options.enable_branch_protection else '✗'}"
+        )
 
         # New outcome management features
         print("\n🎯 Outcome Management System:")
@@ -993,6 +1040,7 @@ class GitHubInitCommand(BaseCommand):
             "• 🤖 Automated progress tracking and metrics dashboard\n"
             "• 🏷️ Hierarchical labels for project organization\n"
             "• 🚀 Complete CI/CD workflow setup\n"
+            "• 🛡️ Branch protection rules enabled by default\n"
             "• 📚 Optional Docusaurus documentation site\n"
             "• 📋 Repository-level project boards\n"
             "• 🔄 Rollback on failure\n"
@@ -1028,6 +1076,7 @@ class GitHubInitCommand(BaseCommand):
                 enable_auto_version=kwargs.get("enable_auto_version", True),
                 enable_auto_merge=kwargs.get("enable_auto_merge", True),
                 enable_auto_release=kwargs.get("enable_auto_release", True),
+                enable_branch_protection=kwargs.get("enable_branch_protection", True),
             )
 
             # Execute the initialization
@@ -1096,6 +1145,11 @@ class GitHubInitCommand(BaseCommand):
                 "--enable-auto-release/--no-auto-release",
                 help="Enable automatic releases",
             ),
+            enable_branch_protection: bool = typer.Option(
+                True,
+                "--enable-branch-protection/--no-branch-protection",
+                help="Enable branch protection rules",
+            ),
         ) -> None:
             """Initialize a new GitHub repository with best practices."""
             try:
@@ -1112,6 +1166,7 @@ class GitHubInitCommand(BaseCommand):
                     enable_auto_version=enable_auto_version,
                     enable_auto_merge=enable_auto_merge,
                     enable_auto_release=enable_auto_release,
+                    enable_branch_protection=enable_branch_protection,
                 )
             except Exception as e:
                 self.console.print(
