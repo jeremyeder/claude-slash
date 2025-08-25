@@ -43,7 +43,6 @@ class GitHubInitOptions:
     enable_claude_review: bool = False
     enable_auto_release: bool = True
     enable_branch_protection: bool = True
-    install_claude_app: bool = True
 
 
 class GitHubInitialization:
@@ -90,17 +89,14 @@ class GitHubInitialization:
             if self.options.enable_dependabot:
                 self._setup_dependabot()
 
-            # Step 8: Install Claude GitHub App if enabled
-            self._install_claude_app()
-
-            # Step 9: Configure advanced automation
+            # Step 8: Configure advanced automation
             self._configure_automation()
 
-            # Step 10: Setup branch protection if enabled
+            # Step 9: Setup branch protection if enabled
             if self.options.enable_branch_protection:
                 self._setup_branch_protection()
 
-            # Step 11: Initial commit and push
+            # Step 10: Initial commit and push
             self._initial_commit_and_push()
 
             print(f"✅ Repository '{self.options.repo_name}' initialized successfully!")
@@ -898,40 +894,6 @@ updates:
         except Exception as e:
             print(f"⚠️ Warning: Failed to setup branch protection: {e}")
 
-    def _install_claude_app(self) -> None:
-        """Install Claude GitHub App for AI-powered code reviews."""
-        if not self.options.install_claude_app:
-            return
-
-        print("🤖 Installing Claude GitHub App...")
-
-        try:
-            # Get the repository owner and name for the app installation
-            user = self._get_github_user()
-            repo_full_name = f"{user}/{self.options.repo_name}"
-
-            # Use subprocess to call the built-in Claude CLI command
-            # The /install-github-app command should work with the repository context
-            result = subprocess.run(
-                ["claude", "install-github-app", "--repo", repo_full_name],
-                capture_output=True,
-                text=True,
-                cwd=os.getcwd()
-            )
-
-            if result.returncode == 0:
-                print("✅ Claude GitHub App installed successfully")
-            else:
-                print(f"⚠️ Warning: Could not install Claude GitHub App: {result.stderr}")
-                print("💡 You can manually install it later with: /install-github-app")
-
-        except FileNotFoundError:
-            print("⚠️ Warning: Claude CLI not found in PATH")
-            print("💡 You can manually install the GitHub App later with: /install-github-app")
-        except Exception as e:
-            print(f"⚠️ Warning: Failed to install Claude GitHub App: {e}")
-            print("💡 You can manually install it later with: /install-github-app")
-
     def _configure_automation(self) -> None:
         """Configure advanced GitHub automation."""
         if self.options.enable_auto_version:
@@ -982,7 +944,6 @@ updates:
         print(
             f"🛡️ Branch protection: {'✓' if self.options.enable_branch_protection else '✗'}"
         )
-        print(f"🤖 Claude GitHub App: {'✓' if self.options.install_claude_app else '✗'}")
 
         # New outcome management features
         print("\n🎯 Outcome Management System:")
@@ -1080,7 +1041,6 @@ class GitHubInitCommand(BaseCommand):
             "• 🏷️ Hierarchical labels for project organization\n"
             "• 🚀 Complete CI/CD workflow setup\n"
             "• 🛡️ Branch protection rules enabled by default\n"
-            "• 🤖 Claude GitHub App integration for AI-powered code reviews\n"
             "• 📚 Optional Docusaurus documentation site\n"
             "• 📋 Repository-level project boards\n"
             "• 🔄 Rollback on failure\n"
@@ -1117,7 +1077,6 @@ class GitHubInitCommand(BaseCommand):
                 enable_auto_merge=kwargs.get("enable_auto_merge", True),
                 enable_auto_release=kwargs.get("enable_auto_release", True),
                 enable_branch_protection=kwargs.get("enable_branch_protection", True),
-                install_claude_app=kwargs.get("install_claude_app", True),
             )
 
             # Execute the initialization
@@ -1191,11 +1150,6 @@ class GitHubInitCommand(BaseCommand):
                 "--enable-branch-protection/--no-branch-protection",
                 help="Enable branch protection rules",
             ),
-            install_claude_app: bool = typer.Option(
-                True,
-                "--install-claude-app/--no-claude-app",
-                help="Install Claude GitHub App for AI-powered code reviews",
-            ),
         ) -> None:
             """Initialize a new GitHub repository with best practices."""
             try:
@@ -1213,7 +1167,6 @@ class GitHubInitCommand(BaseCommand):
                     enable_auto_merge=enable_auto_merge,
                     enable_auto_release=enable_auto_release,
                     enable_branch_protection=enable_branch_protection,
-                    install_claude_app=install_claude_app,
                 )
             except Exception as e:
                 self.console.print(
