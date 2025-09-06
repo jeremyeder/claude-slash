@@ -7,7 +7,6 @@ command support (both Python and legacy shell commands).
 
 Key Features:
 - Rich-formatted terminal output with progress bars and interactive elements
-- Session checkpoint and restore functionality
 - Interactive learning and configuration interfaces
 - Hybrid architecture supporting both Python and shell-based commands
 - Comprehensive CLI with automatic command discovery

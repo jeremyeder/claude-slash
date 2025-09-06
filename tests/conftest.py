@@ -24,7 +24,6 @@ def temp_git_repo() -> Generator[Path, None, None]:
 
         # Create basic file structure
         (repo_path / ".claude").mkdir()
-        (repo_path / ".claude" / "checkpoints").mkdir()
 
         yield repo_path
 
@@ -80,25 +79,6 @@ def mock_gh_operations(fp: FakeProcess) -> FakeProcess:
     return fp
 
 
-@pytest.fixture
-def claude_checkpoints_dir(tmp_path: Path) -> Path:
-    """Create a temporary .claude/checkpoints directory structure."""
-    checkpoints_dir = tmp_path / ".claude" / "checkpoints"
-    checkpoints_dir.mkdir(parents=True)
-    return checkpoints_dir
-
-
-@pytest.fixture
-def sample_checkpoint_data() -> Dict[str, Any]:
-    """Sample checkpoint data for testing."""
-    return {
-        "timestamp": "2024-01-15T10:30:00Z",
-        "branch": "main",
-        "commit": "abc1234567890",
-        "modified_files": ["src/main.py", "tests/test_main.py"],
-        "untracked_files": ["new_feature.py"],
-        "message": "Checkpoint before implementing new feature",
-    }
 
 
 @pytest.fixture
