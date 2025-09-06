@@ -19,22 +19,10 @@ Type "# ✅ Commands installed!"
 Enter
 Sleep 600ms
 
-Type "echo 'Working on feature...' > feature.py"
-Enter
-Type "/project:checkpoint 'Before refactor'"
-Enter
-Sleep 1s
-
-Type "# Checkpoint created! 📋"
+Type "echo 'Working on new feature...' > feature.py"
 Enter
 Sleep 800ms
 
-Type "echo 'Oops, broke it!' > feature.py"
-Enter
-Type "/project:restore"
-Enter
-Sleep 1s
-
-Type "# ✨ Restored! Never lose progress again."
+Type "# ✅ Feature development in progress!"
 Enter
 Sleep 800ms

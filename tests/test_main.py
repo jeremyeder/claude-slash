@@ -100,33 +100,6 @@ class TestCLIApplication:
         assert result.exit_code == 0
         assert "claude-slash" in result.stdout
 
-    def test_checkpoint_command(self):
-        """Test the checkpoint command."""
-        result = self.runner.invoke(app, ["checkpoint", "test-checkpoint"])
-        assert result.exit_code == 0
-        assert "Checkpoint (Preview)" in result.stdout
-        assert "coming soon" in result.stdout
-
-    def test_checkpoint_command_without_name(self):
-        """Test the checkpoint command without a name."""
-        result = self.runner.invoke(app, ["checkpoint"])
-        assert result.exit_code == 0
-        assert "Checkpoint (Preview)" in result.stdout
-        assert "coming soon" in result.stdout
-
-    def test_restore_command(self):
-        """Test the restore command."""
-        result = self.runner.invoke(app, ["restore", "test-checkpoint"])
-        assert result.exit_code == 0
-        assert "Restore (Preview)" in result.stdout
-        assert "coming soon" in result.stdout
-
-    def test_restore_command_without_name(self):
-        """Test the restore command without a name."""
-        result = self.runner.invoke(app, ["restore"])
-        assert result.exit_code == 0
-        assert "Restore (Preview)" in result.stdout
-        assert "coming soon" in result.stdout
 
 
 class TestFixtures:
@@ -158,18 +131,6 @@ class TestFixtures:
         )
         assert result.returncode == 0
 
-    def test_claude_checkpoints_dir_fixture(self, claude_checkpoints_dir):
-        """Test that checkpoints directory fixture works."""
-        assert claude_checkpoints_dir.exists()
-        assert claude_checkpoints_dir.name == "checkpoints"
-        assert claude_checkpoints_dir.parent.name == ".claude"
-
-    def test_sample_checkpoint_data_fixture(self, sample_checkpoint_data):
-        """Test that sample checkpoint data fixture provides valid data."""
-        assert "timestamp" in sample_checkpoint_data
-        assert "branch" in sample_checkpoint_data
-        assert "commit" in sample_checkpoint_data
-        assert isinstance(sample_checkpoint_data["modified_files"], list)
 
     def test_mock_subprocess_calls_fixture(self, mock_subprocess_calls):
         """Test comprehensive subprocess mocking."""

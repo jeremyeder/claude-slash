@@ -214,12 +214,6 @@ Template command for testing and development reference:
 claude-slash version
 ```
 
-#### `checkpoint` & `restore` - Session Management
-```bash
-claude-slash checkpoint auto
-claude-slash restore latest
-```
-**Note**: These are placeholder commands for future session management functionality.
 
 ## Testing Requirements
 

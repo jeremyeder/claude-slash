@@ -117,30 +117,6 @@ def version():
     )
 
 
-@app.command()
-def checkpoint(name: str = typer.Argument("auto", help="Checkpoint name")):
-    """Create a session checkpoint."""
-    console.print(
-        Panel(
-            f"Checkpoint functionality coming soon: {name or 'auto'}",
-            title="Checkpoint (Preview)",
-            style="bold blue",
-        )
-    )
-    console.print("💡 This feature is planned for a future release")
-
-
-@app.command()
-def restore(name: str = typer.Argument("latest", help="Checkpoint name to restore")):
-    """Restore from a session checkpoint."""
-    console.print(
-        Panel(
-            f"Restore functionality coming soon: {name or 'latest'}",
-            title="Restore (Preview)",
-            style="bold blue",
-        )
-    )
-    console.print("💡 This feature is planned for a future release")
 
 
 # Register discovered commands when the module is imported

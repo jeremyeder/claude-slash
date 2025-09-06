@@ -24,7 +24,6 @@ Commands in this repository are designed to be safe:
 - No hardcoded credentials or secrets
 
 ### Data Privacy
-- Checkpoint data is stored locally in your git repository
 - No data is transmitted to external servers
 - Session information includes only basic environment details
 - No sensitive information is captured or stored
@@ -47,7 +46,6 @@ If you discover a security vulnerability, please report it responsibly:
 - Review command implementations before installation
 - Only install commands from trusted sources
 - Keep your git repository private if it contains sensitive data
-- Regularly review checkpoint files for any sensitive information
 
 ### For Contributors
 - Never include hardcoded secrets or credentials
