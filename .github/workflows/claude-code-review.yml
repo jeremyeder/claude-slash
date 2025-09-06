@@ -38,6 +38,9 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}  # Add explicit GitHub token
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
+          # Allow Claude bot to trigger this workflow
+          allowed_bots: "claude"
+
           # Performance optimizations
           timeout_minutes: 5
           max_turns: 3
