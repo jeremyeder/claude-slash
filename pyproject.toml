@@ -101,3 +101,9 @@ addopts = "-ra -q --cov=claude_slash"
 testpaths = [
     "tests",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest-cov>=6.2.1",
+    "pytest-subprocess>=1.5.3",
+]

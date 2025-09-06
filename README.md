@@ -37,9 +37,10 @@ uv sync --dev
 After installation, use slash commands directly in Claude conversations:
 
 ```
-/github-init my-new-repo
+/github-init my-new-repo --description "My awesome project"
 /menuconfig
-/learn "Always validate inputs before processing"
+/learn
+/example --message "Testing the system"
 ```
 
 ### CLI Access
@@ -82,13 +83,23 @@ Linux kernel menuconfig-style TUI for managing CLAUDE.md files:
 - Save/load different configuration profiles
 - Real-time validation and help text
 
-### `/learn` - Knowledge Management
+### `/learn` - Interactive Learning Integration
 Continuously refine your global CLAUDE.md with session learnings:
 
-- Interactive multi-select interface for key insights
-- Automatic categorization and organization
-- Integration with existing knowledge base
-- Persistent learning across sessions
+- **Session Analysis**: Analyzes current Claude Code session for insights
+- **Interactive Integration**: User-friendly interface for reviewing learnings
+- **Smart Suggestions**: Automatically suggests appropriate CLAUDE.md sections
+- **Automatic Backup**: Creates backup before making changes
+- **Multiple Integration Modes**: Append, insert, or manual integration options
+- **Rich UI**: Progress tracking and formatted terminal output
+
+### `/example` - Development Template
+Example command for testing and development:
+
+- **Command Discovery Testing** - Verifies automatic command registration
+- **Development Template** - Copy/paste template for new commands
+- **Rich Formatting Demo** - Shows proper terminal output formatting
+- **Error Handling** - Demonstrates standard error handling patterns
 
 ## Development
 
@@ -153,22 +164,47 @@ uv run mypy src/
 ### Adding New Commands
 
 1. Create a new Python file in `src/claude_slash/commands/`
-2. Inherit from `BaseCommand`
-3. Implement required methods and attributes
-4. Commands are automatically discovered and registered
+2. Create a corresponding markdown file in `.claude/commands/`
+3. Inherit from `BaseCommand` in the Python file
+4. Implement required methods and attributes
+5. Commands are automatically discovered and registered
 
-Example:
+Example Python command (`src/claude_slash/commands/new.py`):
 ```python
 from .base import BaseCommand
 import typer
 
 class NewCommand(BaseCommand):
-    name = "new"
-    help_text = "Description of the new command"
+    @property
+    def name(self) -> str:
+        return "new"
 
-    def execute(self, arg: str = typer.Argument("default")):
+    @property
+    def help_text(self) -> str:
+        return "Description of the new command"
+
+    def execute(self, **kwargs):
         """Execute the command logic."""
-        self.console.print(f"Running new command with: {arg}")
+        message = kwargs.get("message", "Hello!")
+        self.success(f"New command executed: {message}")
+
+    def create_typer_command(self):
+        def command_wrapper(message: str = typer.Option("Hello!", help="Message to display")):
+            self.execute(message=message)
+        return command_wrapper
+```
+
+Example markdown file (`.claude/commands/new.md`):
+```markdown
+# New Command - Description
+
+Brief description of what the command does.
+
+## Usage
+/new --message "Custom message"
+
+## Description
+Detailed description of functionality...
 ```
 
 ### Version Management
@@ -212,17 +248,22 @@ src/claude_slash/           # Python CLI package
 ├── commands/              # CLI command implementations
 │   ├── base.py           # Base command class
 │   ├── github_init.py    # GitHub repository initialization
-│   └── ...               # Additional CLI commands
+│   ├── learn.py          # Interactive learning integration
+│   ├── menuconfig.py     # TUI configuration editor
+│   ├── example.py        # Development template command
+│   └── slash.py          # Slash command utilities
 └── ui/                   # User interface components
     ├── console.py        # Console formatting utilities
     ├── formatting.py     # Text formatting helpers
     └── progress.py       # Progress indicators
 
 .claude/commands/          # Claude Code slash commands
-├── github_init.py        # /github-init slash command
-├── menuconfig.py         # /menuconfig TUI interface
-├── learn.py              # /learn knowledge management
-└── ...                   # Additional slash commands
+├── github_init.py        # /github-init slash command (Python)
+├── menuconfig.py         # /menuconfig TUI interface (Python)
+├── slash.py              # /slash utilities (Python)
+├── learn.md              # /learn knowledge management (Markdown)
+├── example.md            # /example development template (Markdown)
+└── error-utils.md        # Error handling utilities (Markdown)
 
 install.sh                # Project-specific installer
 ```
@@ -235,6 +276,8 @@ install.sh                # Project-specific installer
 - **Project Isolation**: Per-project installations with no global conflicts
 - **GitHub Integration**: Complete repository lifecycle management
 - **Interactive TUIs**: menuconfig-style interfaces for complex workflows
+- **Learning Integration**: Session analysis and knowledge management
+- **Hybrid Command Format**: Python files for complex logic, markdown for simple commands
 
 ## Security
 

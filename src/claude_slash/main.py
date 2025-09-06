@@ -122,12 +122,12 @@ def checkpoint(name: str = typer.Argument("auto", help="Checkpoint name")):
     """Create a session checkpoint."""
     console.print(
         Panel(
-            f"Creating checkpoint: {name or 'auto'}",
-            title="Checkpoint",
-            style="bold green",
+            f"Checkpoint functionality coming soon: {name or 'auto'}",
+            title="Checkpoint (Preview)",
+            style="bold blue",
         )
     )
-    # TODO: Implement checkpoint functionality
+    console.print("💡 This feature is planned for a future release")
 
 
 @app.command()
@@ -135,12 +135,12 @@ def restore(name: str = typer.Argument("latest", help="Checkpoint name to restor
     """Restore from a session checkpoint."""
     console.print(
         Panel(
-            f"Restoring checkpoint: {name or 'latest'}",
-            title="Restore",
-            style="bold yellow",
+            f"Restore functionality coming soon: {name or 'latest'}",
+            title="Restore (Preview)",
+            style="bold blue",
         )
     )
-    # TODO: Implement restore functionality
+    console.print("💡 This feature is planned for a future release")
 
 
 # Register discovered commands when the module is imported
