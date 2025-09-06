@@ -5,7 +5,7 @@ set -e
 # Usage: install.sh [TARGET_DIRECTORY]
 # Example: install.sh ~/repos/example
 
-INSTALLER_VERSION="1.7.0"
+INSTALLER_VERSION="1.8.0"
 GITHUB_REPO="jeremyeder/claude-slash"
 GITHUB_API_URL="https://api.github.com/repos/$GITHUB_REPO"
 
