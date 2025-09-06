@@ -56,50 +56,109 @@ claude-slash --help
 
 ## Key Commands
 
-### `/github-init` - Repository Initialization
-Complete GitHub repository setup with best practices:
+### `/github-init` - Complete Repository Initialization
+Enterprise-grade GitHub repository setup with outcome-driven project management:
 
-- **Repository Creation** - Creates private GitHub repo with proper configuration
-- **CI/CD Workflows** - GitHub Actions for testing, linting, and automated releases
-- **Branch Protection** - Enforces code review and status checks
-- **GitHub Projects** - Repository-level project boards with outcome tracking
-- **Security Setup** - Dependabot, security scanning, and vulnerability management
-- **Documentation** - Optional Docusaurus site generation
-- **Claude Integration** - Pre-configured Claude Code workflows and permissions
+**Core Features:**
+- **🔒 Security-First**: Private repositories by default with branch protection
+- **🎯 Outcome Management**: Three-tier project hierarchy (outcomes → epics → stories)
+- **📋 Professional Templates**: Structured issue templates for systematic development
+- **🤖 Automated Tracking**: Weekly metrics dashboard and progress reporting
+- **🚀 CI/CD Ready**: Complete GitHub Actions workflow setup
+- **🛡️ Security Hardening**: Dependabot, vulnerability scanning, and compliance
+
+**Advanced Automation:**
+- Repository-level project boards with automation workflows
+- Hierarchical label system with validation rules
+- Claude GitHub App integration for AI-powered code reviews
+- Optional Docusaurus documentation site generation
+- Automatic dependency management and security updates
 
 ```bash
-# Basic usage
-/github-init my-new-project
+# Basic usage - creates private repo with full automation
+/github-init my-new-project --description "My awesome project"
 
-# With custom options (interactive prompts guide you)
-/github-init --dry-run  # Preview what will be created
+# Public library with specific settings
+/github-init python-lib --public --license MIT --gitignore Python
+
+# Preview mode to see what will be created
+/github-init test-repo --dry-run --description "Test repository"
+
+# Full feature set with documentation
+/github-init docs-project --create-website --public
 ```
 
-### `/menuconfig` - Interactive Configuration
-Linux kernel menuconfig-style TUI for managing CLAUDE.md files:
+### `/menuconfig` - Interactive TUI Configuration Editor
+Linux kernel menuconfig-style interface for managing CLAUDE.md files:
 
-- Navigate hierarchical configuration menus
-- Enable/disable features and settings
-- Save/load different configuration profiles
-- Real-time validation and help text
+**Interface Features:**
+- **🐧 Familiar Navigation**: Linux kernel menuconfig-inspired keyboard shortcuts
+- **🗂️ Hierarchical Editing**: Tree view of markdown sections with toggle controls
+- **💾 Safe Editing**: Automatic backups and modification tracking
+- **🔍 Smart Search**: Find sections quickly with built-in search functionality
+- **📱 Terminal Friendly**: Works in any terminal environment
+
+**Editing Capabilities:**
+- Toggle sections enabled/disabled with visual feedback (`[*]` / `[ ]`)
+- Navigate with vim-style keys (`j/k`, `h/l`) or arrows
+- Real-time status bar with file info and modification indicators
+- Automatic file detection (project → global CLAUDE.md)
+
+```bash
+/menuconfig                    # Edit project/global CLAUDE.md
+/menuconfig custom.md          # Edit specific file
+```
 
 ### `/learn` - Interactive Learning Integration
-Continuously refine your global CLAUDE.md with session learnings:
+Continuously improve your CLAUDE.md with session insights:
 
-- **Session Analysis**: Analyzes current Claude Code session for insights
-- **Interactive Integration**: User-friendly interface for reviewing learnings
-- **Smart Suggestions**: Automatically suggests appropriate CLAUDE.md sections
-- **Automatic Backup**: Creates backup before making changes
-- **Multiple Integration Modes**: Append, insert, or manual integration options
-- **Rich UI**: Progress tracking and formatted terminal output
+**Learning Extraction:**
+- **📝 Session Analysis**: Captures meaningful insights from Claude Code conversations
+- **🤖 Smart Integration**: Suggests appropriate CLAUDE.md sections for learnings
+- **💭 Interactive Review**: User-friendly interface for reviewing and editing insights
+- **📊 Progress Tracking**: Visual feedback during learning extraction process
+
+**Integration Features:**
+- **🔄 Multiple Modes**: Append to existing sections or create new ones
+- **💾 Safe Operations**: Automatic backup creation before modifications
+- **📋 Rich Formatting**: Maintains proper markdown structure and formatting
+- **⚡ Quick Access**: Works with both project and global CLAUDE.md files
+
+```bash
+/learn                         # Interactive session analysis and integration
+```
+
+### `/slash` - Help System and Updater
+Comprehensive help display and automatic update system:
+
+**Help Features:**
+- **📋 Command Discovery**: Automatically finds and lists all installed commands
+- **📊 Rich Display**: Beautiful table format with descriptions and usage examples
+- **🔍 Smart Descriptions**: Extracts documentation from command files
+- **📁 Installation Info**: Shows command installation location and status
+
+**Update System:**
+- **🔄 GitHub Integration**: Fetches latest releases using GitHub API
+- **📦 Progress Tracking**: Visual progress bars for download and installation
+- **💾 Safe Updates**: Automatic backup creation with rollback protection
+- **✅ Verification**: Confirms successful installation and provides recovery options
+
+```bash
+/slash                         # Show help with all commands
+/slash update                  # Update to latest release
+```
 
 ### `/example` - Development Template
-Example command for testing and development:
+Reference implementation for command development:
 
-- **Command Discovery Testing** - Verifies automatic command registration
-- **Development Template** - Copy/paste template for new commands
-- **Rich Formatting Demo** - Shows proper terminal output formatting
-- **Error Handling** - Demonstrates standard error handling patterns
+- **🏗️ Architecture Demo**: Shows proper BaseCommand inheritance patterns
+- **📝 Documentation**: Comprehensive inline documentation and examples
+- **🎨 Rich Formatting**: Demonstrates proper terminal output styling
+- **⚠️ Error Handling**: Standard error handling and user feedback patterns
+
+```bash
+/example --message "Testing the command system"
+```
 
 ## Development
 
@@ -163,16 +222,24 @@ uv run mypy src/
 
 ### Adding New Commands
 
-1. Create a new Python file in `src/claude_slash/commands/`
-2. Create a corresponding markdown file in `.claude/commands/`
-3. Inherit from `BaseCommand` in the Python file
-4. Implement required methods and attributes
-5. Commands are automatically discovered and registered
+The project uses a **dual command system** supporting both Python and Markdown implementations:
 
-Example Python command (`src/claude_slash/commands/new.py`):
+#### Python Commands (Complex Logic)
+1. Create Python file in `src/claude_slash/commands/` inheriting from `BaseCommand`
+2. Create corresponding markdown documentation in `.claude/commands/`
+3. Commands are automatically discovered and registered in both CLI and slash modes
+
+#### Markdown Commands (Simple Documentation)
+1. Create standalone markdown file in `.claude/commands/`
+2. Used directly by Claude Code for simple commands and utilities
+
+#### Command Development Example
+
+**Python Implementation** (`src/claude_slash/commands/new.py`):
 ```python
 from .base import BaseCommand
 import typer
+from typing import Any
 
 class NewCommand(BaseCommand):
     @property
@@ -181,31 +248,57 @@ class NewCommand(BaseCommand):
 
     @property
     def help_text(self) -> str:
-        return "Description of the new command"
+        return "Description of the new command with usage examples"
 
-    def execute(self, **kwargs):
+    def execute(self, **kwargs: Any) -> None:
         """Execute the command logic."""
         message = kwargs.get("message", "Hello!")
         self.success(f"New command executed: {message}")
 
     def create_typer_command(self):
-        def command_wrapper(message: str = typer.Option("Hello!", help="Message to display")):
+        def command_wrapper(
+            message: str = typer.Option("Hello!", help="Message to display")
+        ) -> None:
             self.execute(message=message)
         return command_wrapper
 ```
 
-Example markdown file (`.claude/commands/new.md`):
+**Markdown Documentation** (`.claude/commands/new.md`):
 ```markdown
-# New Command - Description
+# New Command - Brief Description
 
-Brief description of what the command does.
+Detailed description of what the command does and why it's useful.
 
 ## Usage
+```
 /new --message "Custom message"
+/new --help
+```
 
 ## Description
-Detailed description of functionality...
+Comprehensive documentation including:
+- Feature overview with benefits
+- All command-line arguments and options
+- Multiple usage examples
+- Prerequisites and troubleshooting tips
+- Integration with other commands
+
+## Arguments
+- `--message`: Message to display (default: "Hello!")
+
+## Examples
+```bash
+/new --message "Testing the new command"
+/new                              # Uses default message
 ```
+```
+
+#### Command Requirements
+- **Type Hints**: All public methods must include proper type annotations
+- **Error Handling**: Use `self.error()`, `self.warning()`, `self.success()` for consistent messaging
+- **Rich Output**: Use `self.console` for formatted terminal output
+- **Documentation**: Both Python docstrings and markdown files required
+- **Testing**: Add tests in `tests/` directory for new commands
 
 ### Version Management
 
@@ -258,10 +351,14 @@ src/claude_slash/           # Python CLI package
     └── progress.py       # Progress indicators
 
 .claude/commands/          # Claude Code slash commands
-├── github_init.py        # /github-init slash command (Python)
+├── github_init.py        # /github-init repository setup (Python)
 ├── menuconfig.py         # /menuconfig TUI interface (Python)
-├── slash.py              # /slash utilities (Python)
-├── learn.md              # /learn knowledge management (Markdown)
+├── slash.py              # /slash help and updater (Python)
+├── learn.py              # /learn session analysis (Python)
+├── github-init.md        # /github-init documentation (Markdown)
+├── menuconfig.md         # /menuconfig documentation (Markdown)
+├── slash.md              # /slash documentation (Markdown)
+├── learn.md              # /learn documentation (Markdown)
 ├── example.md            # /example development template (Markdown)
 └── error-utils.md        # Error handling utilities (Markdown)
 
