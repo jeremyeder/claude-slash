@@ -48,3 +48,5 @@ jobs:
             Review this PR focusing on code quality and Python best practices. Be concise.
 
             Key areas: implementation patterns, error handling, testing approach.
+# Add this after line 50 (after the direct_prompt section)
+allowed_bots: "claude"
