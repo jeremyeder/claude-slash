@@ -104,25 +104,29 @@ class TestCLIApplication:
         """Test the checkpoint command."""
         result = self.runner.invoke(app, ["checkpoint", "test-checkpoint"])
         assert result.exit_code == 0
-        assert "Creating checkpoint" in result.stdout
+        assert "Checkpoint (Preview)" in result.stdout
+        assert "coming soon" in result.stdout
 
     def test_checkpoint_command_without_name(self):
         """Test the checkpoint command without a name."""
         result = self.runner.invoke(app, ["checkpoint"])
         assert result.exit_code == 0
-        assert "Creating checkpoint" in result.stdout
+        assert "Checkpoint (Preview)" in result.stdout
+        assert "coming soon" in result.stdout
 
     def test_restore_command(self):
         """Test the restore command."""
         result = self.runner.invoke(app, ["restore", "test-checkpoint"])
         assert result.exit_code == 0
-        assert "Restoring checkpoint" in result.stdout
+        assert "Restore (Preview)" in result.stdout
+        assert "coming soon" in result.stdout
 
     def test_restore_command_without_name(self):
         """Test the restore command without a name."""
         result = self.runner.invoke(app, ["restore"])
         assert result.exit_code == 0
-        assert "Restoring checkpoint" in result.stdout
+        assert "Restore (Preview)" in result.stdout
+        assert "coming soon" in result.stdout
 
 
 class TestFixtures:
