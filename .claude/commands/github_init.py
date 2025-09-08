@@ -152,8 +152,8 @@ class GitHubInitialization:
         if self.options.readme:
             self._create_readme()
 
-        if self.options.gitignore:
-            self._create_gitignore()
+        # Always create a .gitignore file (basic one if no template specified)
+        self._create_gitignore()
 
         if self.options.license:
             self._create_license()
@@ -182,23 +182,26 @@ Contributions are welcome! Please read our contributing guidelines.
 
     def _create_gitignore(self) -> None:
         """Create .gitignore file."""
-        # Use gh to get gitignore template if available
-        try:
-            result = subprocess.run(
-                ["gh", "api", f"/gitignore/templates/{self.options.gitignore}"],
-                capture_output=True,
-                text=True,
-            )
-            if result.returncode == 0:
-                import json
+        content = None
 
-                data = json.loads(result.stdout)
-                content = data.get("source", "")
-                with open(".gitignore", "w") as f:
-                    f.write(content)
-                self.created_files.append(".gitignore")
-        except Exception:
-            # Fallback to basic gitignore
+        # Use gh to get gitignore template if specific template was requested
+        if self.options.gitignore:
+            try:
+                result = subprocess.run(
+                    ["gh", "api", f"/gitignore/templates/{self.options.gitignore}"],
+                    capture_output=True,
+                    text=True,
+                )
+                if result.returncode == 0:
+                    import json
+
+                    data = json.loads(result.stdout)
+                    content = data.get("source", "")
+            except Exception:
+                pass  # Will fall through to basic gitignore
+
+        # Use basic gitignore if no template specified or template fetch failed
+        if not content:
             basic_gitignore = """# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -262,9 +265,12 @@ venv.bak/
 ehthumbs.db
 Thumbs.db
 """
-            with open(".gitignore", "w") as f:
-                f.write(basic_gitignore)
-            self.created_files.append(".gitignore")
+            content = basic_gitignore
+
+        # Write the content to .gitignore file
+        with open(".gitignore", "w") as f:
+            f.write(content)
+        self.created_files.append(".gitignore")
 
     def _create_license(self) -> None:
         """Create LICENSE file."""
@@ -934,8 +940,7 @@ updates:
         if self.options.description:
             print(f"📝 Description: {self.options.description}")
         print(f"📄 README: {'✓' if self.options.readme else '✗'}")
-        if self.options.gitignore:
-            print(f"🚫 .gitignore: {self.options.gitignore}")
+        print(f"🚫 .gitignore: {self.options.gitignore or 'basic'}")
         if self.options.license:
             print(f"📜 License: {self.options.license}")
         print(f"🌐 Website: {'✓' if self.options.create_website else '✗'}")
